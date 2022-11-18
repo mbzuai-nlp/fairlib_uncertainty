@@ -39,7 +39,7 @@ class MLP(BaseModel):
                 # Init the mapping for the augmentation layer
                 if self.args.gated_mapping is None:
                     # For each class init a discriminator component
-                    self.mapping = torch.eye(self.args.num_groups, requires_grad=False)
+                    self.mapping = torch.eye(self.args.num_groups, requires_grad=False).to(self.args.device)
                 else:
                     # self.mapping = torch.from_numpy(mapping, requires_grad=False)
                     raise NotImplementedError
@@ -61,6 +61,7 @@ class MLP(BaseModel):
 
         # Augmentation
         if self.args.gated and self.args.n_hidden > 0:
+            #group_label = group_label.to(input_data.device)
             assert group_label is not None, "Group labels are needed for augmentation"
 
             specific_output = self.augmentation_components(input_data, group_label)
@@ -85,6 +86,7 @@ class MLP(BaseModel):
             if self.args.gated and self.args.n_hidden > 0:
                 assert group_label is not None, "Group labels are needed for augmentation"
 
+                print(self.augmentation_components)
                 specific_output = self.augmentation_components(input_data, group_label)
 
                 main_output = main_output + specific_output
@@ -174,7 +176,6 @@ class BERTClassifier(BaseModel):
 
     def forward(self, input_data, mask=None, group_label = None):
         bert_output = self.bert(input_data, encoder_attention_mask=mask.T)[1]
-        #bert_output = self.bert(input_data)[1]
         return self.classifier(bert_output, group_label)
     
     def hidden(self, input_data, group_label = None):

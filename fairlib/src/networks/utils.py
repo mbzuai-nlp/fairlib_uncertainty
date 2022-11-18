@@ -16,7 +16,7 @@ def train_epoch(model, iterator, args, epoch):
 
     optimizer = model.optimizer
     criterion = model.criterion
-
+    
     data_t0 = time.time()
     data_t, t = 0, 0
     
@@ -233,6 +233,8 @@ class BaseModel(nn.Module):
             self.criterion = torch.nn.MSELoss(reduction = reduction)
         else:
             self.criterion = torch.nn.CrossEntropyLoss(reduction = reduction)
+            
+        self.scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(self.optimizer, 'min', factor=0.5, patience=2)
         
         print_network(self, verbose=True)
 
@@ -300,7 +302,7 @@ class BaseModel(nn.Module):
                 model = self, 
                 iterator = self.args.opt.train_generator, 
                 args = self.args, 
-                epoch = epoch)
+                epoch = epoch)s
 
             # One epoch's validation
             (epoch_valid_loss, valid_preds, 
@@ -315,11 +317,13 @@ class BaseModel(nn.Module):
 
             epoch_valid_acc = accuracy_score(valid_labels, valid_preds)
             # Check if there was an improvement
-            #is_best = epoch_valid_loss < best_valid_loss
-            #best_valid_loss = min(epoch_valid_loss, best_valid_loss)
+            is_best = epoch_valid_loss < best_valid_loss
+            best_valid_loss = min(epoch_valid_loss, best_valid_loss)
             
-            is_best = epoch_valid_acc > best_valid_acc
-            best_valid_acc = max(epoch_valid_acc, best_valid_acc)
+            #is_best = epoch_valid_acc > best_valid_acc
+            #best_valid_acc = max(epoch_valid_acc, best_valid_acc)
+            
+            self.scheduler.step(epoch_valid_loss)
 
             if not is_best:
                 epochs_since_improvement += 1
