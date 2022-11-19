@@ -302,7 +302,7 @@ class BaseModel(nn.Module):
                 model = self, 
                 iterator = self.args.opt.train_generator, 
                 args = self.args, 
-                epoch = epoch)s
+                epoch = epoch)
 
             # One epoch's validation
             (epoch_valid_loss, valid_preds, 
