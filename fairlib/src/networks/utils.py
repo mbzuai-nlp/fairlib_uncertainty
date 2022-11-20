@@ -252,7 +252,7 @@ class BaseModel(nn.Module):
             self.BN = None
 
         assert (self.args.dropout >= 0) and (self.args.dropout <= 1), "Probability must be in the range from 0 to 1"
-        if self.args.dropout > 0:
+        if self.args.dropout >= 0:
             self.dropout = nn.Dropout(p=self.args.dropout)
         else:
             self.dropout = None
