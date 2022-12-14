@@ -233,6 +233,12 @@ class BaseOptions(object):
                             help='apply 1d batch norm to the model')
         parser.add_argument('--classification_head_update_frequency',  type=pos_int, default=1,
                             help='the update frequency of the main model classification head (every N batches)')
+        parser.add_argument('--subsample_perc', type=float, default=1.0,
+                            help='subsample percent for train split')
+        parser.add_argument('--num_remove_clusters', type=int, default=0,
+                            help='num of clusters to remove, should be less than num_clusters')
+        parser.add_argument('--num_clusters', type=int, default=0,
+                            help='num of clusters')
 
         # Arguments for balanced training
         parser.add_argument('--BT', type=str, default=None, help='Reweighting | Resampling | Downsampling')

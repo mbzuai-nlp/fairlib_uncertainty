@@ -1,6 +1,7 @@
 import numpy as np
 import torch
 import pandas as pd
+from sklearn.cluster import KMeans
 from .BT import get_weights, get_sampled_indices
 from .generalized_BT import get_data_distribution, manipulate_data_distribution
 
@@ -42,6 +43,9 @@ class BaseDataset(torch.utils.data.Dataset):
         self.y = np.array(self.y).astype(int)
         self.protected_label = np.array(self.protected_label).astype(int)
 
+        self.subsample_data()
+        self.remove_clusters()
+
         self.manipulate_data_distribution()
 
         self.balanced_training()
@@ -66,6 +70,36 @@ class BaseDataset(torch.utils.data.Dataset):
     
     def load_data(self):
         pass
+
+    def subsample_data(self):
+        'Subsamples train split'
+        if self.split == "train" and self.args.subsample_perc < 1.0:
+            subsample_len = int(len(self.X) * self.args.subsample_perc)
+            self.X = self.X[:subsample_len]
+            self.y = self.y[:subsample_len]
+            self.protected_label = self.protected_label[:subsample_len]
+            self.regression_label = self.regression_label[:subsample_len]
+            if self.mask is not None:
+                self.mask = self.mask[:subsample_len]
+
+    def remove_clusters(self):
+        'Cluster train set and remove several clusters'
+        if self.split == "train" and self.args.num_remove_clusters > 0:
+            assert self.args.num_remove_clusters < self.args.num_clusters, "Number of clusters should be greater than number of clusters to remove"
+            cluster_alg = KMeans(n_clusters=self.args.num_clusters)
+            clusters = cluster_alg.fit_predict(self.X)
+            clusters_to_remove = np.random.choice(np.arange(self.args.num_clusters),
+                                                  self.args.num_remove_clusters,
+                                                  replace=False)
+            for cluster in clusters_to_remove:
+                clusters = np.where(clusters != cluster, clusters, -100)
+            clusters = np.where(clusters == -100, False, True)
+            self.X = self.X[clusters]
+            self.y = self.y[clusters]
+            self.protected_label = self.protected_label[clusters]
+            self.regression_label = self.regression_label[clusters]
+            if self.mask is not None:
+                self.mask = self.mask[clusters]
 
     def manipulate_data_distribution(self):
         if self.args.GBT and self.split == "train":
