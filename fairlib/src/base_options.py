@@ -239,6 +239,8 @@ class BaseOptions(object):
                             help='num of clusters to remove, should be less than num_clusters')
         parser.add_argument('--num_clusters', type=int, default=0,
                             help='num of clusters')
+        parser.add_argument('--remove_percent', type=float, default=0,
+                            help='percent of the most similar to test samples from train')
 
         # Arguments for balanced training
         parser.add_argument('--BT', type=str, default=None, help='Reweighting | Resampling | Downsampling')

@@ -31,6 +31,11 @@ def get_dataloaders(args):
     train_data = task_dataloader(args=args, split="train")
     dev_data = task_dataloader(args=args, split="dev")
     test_data = task_dataloader(args=args, split="test")
+    if args.remove_percent != 0:
+        if args.num_clusters != 0:
+            train_data.cluster_and_remove(test_data)
+        else:
+            train_data.remove_similar(test_data)
 
 
     # DataLoader Parameters

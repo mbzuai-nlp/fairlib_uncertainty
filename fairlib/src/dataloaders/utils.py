@@ -101,6 +101,33 @@ class BaseDataset(torch.utils.data.Dataset):
             if self.mask is not None:
                 self.mask = self.mask[clusters]
 
+    def remove_similar(self, another_dataset, another_centroid=None):
+        from scipy import spatial
+        if another_centroid is None:
+            another_centroid = np.mean(another_dataset.X, axis=0)
+        scores = []
+        for el in self.X:
+            scores += [1 - spatial.distance.cosine(el, another_centroid)]
+        print(np.min(scores), np.max(scores), np.mean(scores), np.median(scores))
+        top_scores = np.sort(scores)[:int((1 - self.args.remove_percent) * len(scores))]
+        print(np.min(top_scores), np.max(top_scores), np.mean(top_scores), np.median(top_scores))
+        top_score_indices = np.argsort(scores)[:int((1 - self.args.remove_percent) * len(scores))]
+        self.X = self.X[top_score_indices]
+        self.y = self.y[top_score_indices]
+        self.protected_label = self.protected_label[top_score_indices]
+        self.regression_label = self.regression_label[top_score_indices]
+        if self.mask is not None:
+            self.mask = self.mask[top_score_indices]
+
+    def cluster_and_remove(self, another_dataset):
+        # Cluster another dataset, choose random cluster and remove most similar to this cluster samples
+        cluster_alg = KMeans(n_clusters=self.args.num_clusters)
+        clusters = cluster_alg.fit_predict(another_dataset.X)
+        clusters_to_remove = np.random.choice(np.arange(self.args.num_clusters),
+                                              1, replace=False)
+        another_centroid = cluster_alg.cluster_centers_[clusters_to_remove]
+        self.remove_similar(another_dataset, another_centroid)
+
     def manipulate_data_distribution(self):
         if self.args.GBT and self.split == "train":
             # Get data distribution
