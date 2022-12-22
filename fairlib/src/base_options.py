@@ -187,7 +187,7 @@ class BaseOptions(object):
                             help='if saving batch evaluation results')
         parser.add_argument('--checkpoint_interval', type=int, default=1, metavar='N',
                             help='checkpoint interval (epoch)')
-        parser.add_argument('--dataset', type=str, default='Moji',
+        parser.add_argument('--dataset', type=str, default='Bios_gender',
                             help='dataset: Moji | Bios_gender | Bios_economy | Bios_both')
         parser.add_argument('--data_dir', type=str, default=None,
                             help='dataset root')
@@ -452,6 +452,12 @@ class BaseOptions(object):
                     logging.warning((
                         '{} already exists, tried to move to {}, but failed, '
                         'possibly due to other process having already done it'
+                    ).format(yaml_name, old_opt_new_name))
+                    pass
+                except:
+                    logging.warning((
+                        '{} already exists, tried to move to {}, but failed, '
+                        'possibly due to other process having already done it, Not finished'
                     ).format(yaml_name, old_opt_new_name))
                     pass
 

@@ -2,7 +2,7 @@ import numpy as np
 import torch
 from transformers import BertModel, BertTokenizer
 import pickle
-from tqdm.auto import tqdm, trange
+from tqdm import tqdm
 
 class BERT_encoder:
     def __init__(self, batch_size=128) -> None:
@@ -26,7 +26,7 @@ class BERT_encoder:
         attention_mask = []
         total_n = len(data)
         n_iterations = (total_n // self.batch_size) + (total_n % self.batch_size > 0)
-        for i in trange(n_iterations):
+        for i in tqdm(range(n_iterations)):
             row_lists = list(data)[i*self.batch_size:(i+1)*self.batch_size]
             tokens = self.tokenizer(row_lists, add_special_tokens=True, padding=True, truncation=True, return_tensors="pt")
             input_ids = tokens['input_ids']

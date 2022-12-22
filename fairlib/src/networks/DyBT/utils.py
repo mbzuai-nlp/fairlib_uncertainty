@@ -166,6 +166,15 @@ class BaseDyBT(Sampler):
             text = text.to(device)
             tags = tags.to(device).long()
             p_tags = p_tags.to(device).float()
+            
+            if len(batch) == 7:
+                if not torch.is_tensor(batch[6]):
+                    mask = torch.stack(batch[6])
+                else:
+                    mask = batch[6]
+                mask = mask.float().to(args.device)
+                if len(mask.shape) > 1:
+                    mask = mask.squeeze()
 
             if self.args.BT is not None and self.args.BT == "Reweighting":
                 instance_weights = batch[3].float()
@@ -176,10 +185,17 @@ class BaseDyBT(Sampler):
                 regression_tags = regression_tags.to(device)
 
             # main model predictions
+            
             if self.args.gated:
-                predictions = self.model(text, p_tags)
+                if len(batch) == 7:
+                    predictions = self.model(text, mask, p_tags)
+                else:
+                    predictions = self.model(text, p_tags)
             else:
-                predictions = self.model(text)
+                if len(batch) == 7:
+                    predictions = self.model(text, mask)
+                else:
+                    predictions = self.model(text)
 
             predictions = predictions if not self.args.regression else predictions.squeeze()
 

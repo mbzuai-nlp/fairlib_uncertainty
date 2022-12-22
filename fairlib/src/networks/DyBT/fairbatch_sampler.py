@@ -142,9 +142,24 @@ class FairBatch(Sampler):
 
         for batch in self.data_iterator:
             
-            text = batch[0].squeeze()
-            tags = batch[1].squeeze()
-            p_tags = batch[2].squeeze()
+            text = batch[0]
+            if len(text.shape) > 2:
+                text = text.squeeze()
+            tags = batch[1].long()
+            if len(tags.shape) > 1:
+                tags = tags.squeeze()
+            p_tags = batch[2].float()
+            if len(p_tags.shape) > 1:
+                p_tags = p_tags.squeeze()
+                
+            if len(batch) == 7:
+                if not torch.is_tensor(batch[6]):
+                    mask = torch.stack(batch[6])
+                else:
+                    mask = batch[6]
+                mask = mask.float().to(device)
+                if len(mask.shape) > 1:
+                    mask = mask.squeeze()
 
             text = text.to(device)
             tags = tags.to(device).long()
@@ -162,9 +177,14 @@ class FairBatch(Sampler):
             if self.args.gated:
                 predictions = self.model(text, p_tags)
             else:
-                predictions = self.model(text)
+                if len(batch) == 7:
+                    predictions = self.model(text, mask)
+                else:
+                    predictions = self.model(text)
 
-            predictions = predictions if not self.args.regression else predictions.squeeze()
+
+            if len(predictions.shape) > 1:
+                predictions = predictions if not self.args.regression else predictions.squeeze()
 
             # add the weighted loss
             if self.args.BT is not None and self.args.BT == "Reweighting":

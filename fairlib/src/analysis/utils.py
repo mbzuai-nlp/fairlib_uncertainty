@@ -121,7 +121,7 @@ def get_dir(results_dir, project_dir, checkpoint_dir, checkpoint_name, model_id)
             # if file.endswith(".txt"):
                 # print(os.path.join(root, file))
         for dir in dirs:
-            if dir.startswith(model_id):
+            if dir.startswith(model_id): 
                 _dirs = Path(os.path.join(root, dir))
 
                 # Open the file and load the file
@@ -132,6 +132,8 @@ def get_dir(results_dir, project_dir, checkpoint_dir, checkpoint_name, model_id)
                 for root2, dirs2, files2 in os.walk(_dirs / checkpoint_dir):
                     for file2 in files2:
                         if file2.startswith(checkpoint_name):
+                            if 'cls' in str(file2):
+                                continue
                             _dirs2 = os.path.join(root2, file2)
                             _checkpoints_dirs.append(_dirs2)
                 exps.append(
@@ -159,7 +161,7 @@ def get_model_scores(exp, GAP_metric, Performance_metric, keep_original_metrics 
     epoch_scores_dev = {"performance":[],"fairness":[]}
     epoch_scores_test = {"performance":[],"fairness":[]}
     for epoch_result_dir in exp["dir"]:
-        epoch_result = torch.load(epoch_result_dir)
+        epoch_result = torch.load(epoch_result_dir, map_location='cuda:0')
 
         # Track the epoch id
         epoch_id.append(epoch_result["epoch"])

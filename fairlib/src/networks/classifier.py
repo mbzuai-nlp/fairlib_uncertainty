@@ -175,12 +175,20 @@ class BERTClassifier(BaseModel):
         print("Number of trainable parameters:", self.trainable_parameter_counting())
 
     def forward(self, input_data, mask=None, group_label = None):
+        if len(input_data.shape) < 2:
+            input_data = input_data.unsqueeze(0)
+        if (mask is not None) and (len(mask.shape) < 2):
+            mask = mask.unsqueeze(1)
         bert_output = self.bert(input_data, encoder_attention_mask=mask.T)[1]
         return self.classifier(bert_output, group_label)
     
-    def hidden(self, input_data, group_label = None):
-        bert_output = self.bert(input_data)[1]
-
+    def hidden(self, input_data, mask=None, group_label = None):
+        if len(input_data.shape) < 2:
+            input_data = input_data.unsqueeze(0)
+        if (mask is not None) and (len(mask.shape) < 2):
+            mask = mask.unsqueeze(1)
+            
+        bert_output = self.bert(input_data, encoder_attention_mask=mask.T)[1]
         return self.classifier.hidden(bert_output, group_label)
 
     def freeze_roberta_layers(self, number_of_layers):
