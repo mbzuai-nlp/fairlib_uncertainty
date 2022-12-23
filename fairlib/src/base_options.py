@@ -219,6 +219,8 @@ class BaseOptions(object):
                             help='number of hidden units for the main task classifier')
         parser.add_argument('--n_hidden',  type=int, default=2, 
                             help='number of hidden layers')
+        parser.add_argument('--spectral_norm',  action='store_true', default=False, 
+                            help='spectral norm in the penultimate layer')
         parser.add_argument('--dropout', type=float, default=0,
                             help='dropout probability')
         parser.add_argument('--emb_size', type=pos_int, default=2304,
