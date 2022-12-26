@@ -120,7 +120,7 @@ class MLP(BaseModel):
                 if self.AF is not None:
                     hidden_layers.append(self.AF)
             return hidden_layers
-
+    
     def get_cls_parameter(self):
         parameters = []
         if self.args.adv_level == "output":
@@ -182,7 +182,7 @@ class BERTClassifier(BaseModel):
             input_data = input_data.unsqueeze(0)
         if (mask is not None) and (len(mask.shape) < 2):
             mask = mask.unsqueeze(1)
-        bert_output = self.bert(input_data, encoder_attention_mask=mask.T)[1]
+        bert_output = self.bert(input_data, attention_mask=mask.T)[1]
         return self.classifier(bert_output, group_label)
     
     def hidden(self, input_data, mask=None, group_label = None):
@@ -191,7 +191,7 @@ class BERTClassifier(BaseModel):
         if (mask is not None) and (len(mask.shape) < 2):
             mask = mask.unsqueeze(1)
             
-        bert_output = self.bert(input_data, encoder_attention_mask=mask.T)[1]
+        bert_output = self.bert(input_data, attention_mask=mask.T)[1]
         return self.classifier.hidden(bert_output, group_label)
 
     def freeze_roberta_layers(self, number_of_layers):
