@@ -15,7 +15,7 @@ class TrustpilotDataset(BaseDataset):
         if self.args.encoder_architecture == "Fixed":
             self.X = list(data[self.embedding_type])
         elif self.args.encoder_architecture == "BERT":
-            self.X = self.args.text_encoder.encoder(list(data[self.text_type]))
+            self.X, self.token_type_ids, self.mask = self.args.text_encoder.encoder(list(data[self.text_type]))
         else:
             raise NotImplementedError
 

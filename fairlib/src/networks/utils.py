@@ -16,26 +16,38 @@ def train_epoch(model, iterator, args, epoch):
 
     optimizer = model.optimizer
     criterion = model.criterion
-
+    
     data_t0 = time.time()
     data_t, t = 0, 0
     
     for it, batch in enumerate(iterator):
-        
-        text = batch[0].squeeze()
+        text = batch[0]
+        if len(text.shape) > 2:
+            text = text.squeeze()
         if len(batch) == 7:
-            mask = torch.stack(batch[6]).float().squeeze()
-            mask = mask.to(args.device)
+            if not torch.is_tensor(batch[6]):
+                mask = torch.stack(batch[6])
+            else:
+                mask = batch[6]
+            mask = mask.float().to(args.device)
+            if len(mask.shape) > 1:
+                mask = mask.squeeze()
 
-        tags = batch[1].long().squeeze()
-        p_tags = batch[2].float().squeeze()
+        tags = batch[1].long()
+        if len(tags.shape) > 1:
+            tags = tags.squeeze()
+        p_tags = batch[2].float()
+        if len(p_tags.shape) > 1:
+            p_tags = p_tags.squeeze()
 
         if args.BT is not None and args.BT == "Reweighting":
             instance_weights = batch[3].float()
             instance_weights = instance_weights.to(args.device)
         
         if args.regression:
-            regression_tags = batch[5].float().squeeze()
+            regression_tags = batch[5].float()
+            if len(regression_tags.shape) > 1:
+                regression_tags = regression_tags.squeeze()
             regression_tags = regression_tags.to(args.device)
 
         text = text.to(args.device)
@@ -55,7 +67,8 @@ def train_epoch(model, iterator, args, epoch):
             else:
                 predictions = model(text)
 
-        predictions = predictions if not args.regression else predictions.squeeze()
+        if len(predictions.shape) > 1:
+            predictions = predictions if not args.regression else predictions.squeeze()
         # main tasks loss
         # add the weighted loss
         if args.BT is not None and args.BT == "Reweighting":
@@ -71,9 +84,15 @@ def train_epoch(model, iterator, args, epoch):
 
             # get hidden representations
             if args.gated:
-                hs = model.hidden(text, p_tags)
+                if len(batch) == 7:
+                    hs = model.hidden(text, mask, p_tags)
+                else:
+                    hs = model.hidden(text, p_tags)
             else:
-                hs = model.hidden(text)
+                if len(batch) == 7:
+                    hs = model.hidden(text, mask)
+                else:
+                    hs = model.hidden(text)
 
             adv_losses = args.discriminator.adv_loss(hs, tags, p_tags)
 
@@ -83,9 +102,15 @@ def train_epoch(model, iterator, args, epoch):
         if args.FCL:
             # get hidden representations
             if args.gated:
-                hs = model.hidden(text, p_tags)
+                if len(batch) == 7:
+                    hs = model.hidden(text, mask, p_tags)
+                else:
+                    hs = model.hidden(text, p_tags)
             else:
-                hs = model.hidden(text)
+                if len(batch) == 7:
+                    hs = model.hidden(text, mask)
+                else:
+                    hs = model.hidden(text)
 
             # update the loss with Fair Supervised Contrastive Loss
             fscl_loss = args.FairSCL(hs, tags, p_tags)
@@ -161,7 +186,13 @@ def eval_epoch(model, iterator, args):
         tags = batch[1]
         p_tags = batch[2]
         if len(batch) == 7:
-            mask = torch.stack(batch[6]).float().squeeze().to(device)
+            if not torch.is_tensor(batch[6]):
+                mask = torch.stack(batch[6])
+            else:
+                mask = batch[6]
+            mask = mask.float().to(args.device)
+            if len(mask.shape) > 1:
+                mask = mask.squeeze()
 
         text = text.to(device)
         tags = tags.to(device).long()
@@ -172,7 +203,8 @@ def eval_epoch(model, iterator, args):
             instance_weights = instance_weights.to(device)
 
         if args.regression:
-            regression_tags = batch[5].squeeze()
+            if len(regression_tags.shape) > 1:
+                regression_tags = regression_tags.squeeze()
             regression_tags = regression_tags.to(args.device)
 
         # main model predictions
@@ -184,7 +216,8 @@ def eval_epoch(model, iterator, args):
             else:
                 predictions = model(text)
 
-        predictions = predictions if not args.regression else predictions.squeeze()
+        if len(predictions.shape) > 1:
+            predictions = predictions if not args.regression else predictions.squeeze()
 
         # add the weighted loss
         if args.BT is not None and args.BT == "Reweighting":
@@ -233,6 +266,8 @@ class BaseModel(nn.Module):
             self.criterion = torch.nn.MSELoss(reduction = reduction)
         else:
             self.criterion = torch.nn.CrossEntropyLoss(reduction = reduction)
+            
+        self.scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(self.optimizer, 'min', factor=0.5, patience=2)
         
         print_network(self, verbose=True)
 
@@ -315,11 +350,13 @@ class BaseModel(nn.Module):
 
             epoch_valid_acc = accuracy_score(valid_labels, valid_preds)
             # Check if there was an improvement
-            #is_best = epoch_valid_loss < best_valid_loss
-            #best_valid_loss = min(epoch_valid_loss, best_valid_loss)
+            is_best = epoch_valid_loss < best_valid_loss
+            best_valid_loss = min(epoch_valid_loss, best_valid_loss)
             
-            is_best = epoch_valid_acc > best_valid_acc
-            best_valid_acc = max(epoch_valid_acc, best_valid_acc)
+            #is_best = epoch_valid_acc > best_valid_acc
+            #best_valid_acc = max(epoch_valid_acc, best_valid_acc)
+            
+            self.scheduler.step(epoch_valid_loss)
 
             if not is_best:
                 epochs_since_improvement += 1
@@ -362,9 +399,25 @@ class BaseModel(nn.Module):
 
         for batch in iterator:
             
-            text = batch[0].squeeze()
-            tags = batch[1].squeeze()
-            p_tags = batch[2].squeeze()
+            text = batch[0]
+            if len(text.shape) > 2:
+                text = text.squeeze()
+            tags = batch[1]
+            if len(tags.shape) > 1:
+                tags = tags.squeeze()
+            p_tags = batch[2]
+            if len(p_tags.shape) > 1:
+                p_tags = p_tags.squeeze()
+                
+            if len(batch) == 7:
+                if not torch.is_tensor(batch[6]):
+                    mask = torch.stack(batch[6])
+                else:
+                    mask = batch[6]
+                mask = mask.float().to(self.args.device)
+                if len(mask.shape) > 1:
+                    mask = mask.squeeze()
+            
             
             labels += list(tags.cpu().numpy())
             private_labels += list(p_tags.cpu().numpy())
@@ -374,15 +427,23 @@ class BaseModel(nn.Module):
             p_tags = p_tags.to(self.args.device).float()
 
             if self.args.regression:
-                regression_tags = batch[5].float().squeeze()
+                regression_tags = batch[5].float()
+                if len(regression_tags.shape) > 1:
+                    regression_tags = regression_tags.squeeze()
                 regression_labels += list(regression_tags.cpu().numpy() )
                 regression_tags = regression_tags.to(self.args.device)
 
             # Extract hidden representations
             if self.args.gated:
-                hidden_state = self.hidden(text, p_tags)
+                if len(batch) == 7:
+                    hidden_state = self.hidden(text, mask, p_tags)
+                else:
+                    hidden_state = self.hidden(text, p_tags)
             else:
-                hidden_state = self.hidden(text)
+                if len(batch) == 7:
+                    hidden_state = self.hidden(text, mask)
+                else:
+                    hidden_state = self.hidden(text)
             
             hidden.append(hidden_state.detach().cpu().numpy())
         

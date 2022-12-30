@@ -29,6 +29,16 @@ def adv_train_batch(model, discriminators, batch, args):
     text = batch[0]
     tags = batch[1].long()
     p_tags = batch[2].float()
+    
+    if len(batch) == 7:
+        if not torch.is_tensor(batch[6]):
+            mask = torch.stack(batch[6])
+        else:
+            mask = batch[6]
+        mask = mask.float().to(args.device)
+        if len(mask.shape) > 1:
+            mask = mask.squeeze()
+
     adv_instance_weights = batch[4].float()
 
     # Remove instances that are not annotated with protected labels.
@@ -46,9 +56,15 @@ def adv_train_batch(model, discriminators, batch, args):
         
         # hidden representations from the model
     if args.gated:
-        hs = model.hidden(text, p_tags).detach()
+        if len(batch) == 7:
+            hs = model.hidden(text, mask, p_tags).detach()
+        else:
+            hs = model.hidden(text, p_tags).detach()
     else:
-        hs = model.hidden(text).detach()
+        if len(batch) == 7:
+            hs = model.hidden(text, mask).detach()
+        else:
+            hs = model.hidden(text).detach()
 
     # iterate all discriminators
     for discriminator in discriminators:
@@ -154,11 +170,19 @@ def adv_eval_epoch(model, discriminators, iterator, args):
             tags = tags.to(args.device)
             p_tags = p_tags.to(args.device)
 
-            # hidden representations from the model
+            # hidden representations from the model                
             if args.gated:
-                hs = model.hidden(text, p_tags).detach()
+                if len(batch) == 7:
+                    hs = model.hidden(text, mask, p_tags).detach()
+                else:
+                    hs = model.hidden(text, p_tags).detach()
             else:
-                hs = model.hidden(text).detach()
+                if len(batch) == 7:
+                    hs = model.hidden(text, mask).detach()
+                else:
+                    hs = model.hidden(text).detach()
+
+
 
             # iterate all discriminators
             for index, discriminator in enumerate(discriminators):
