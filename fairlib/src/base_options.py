@@ -241,6 +241,10 @@ class BaseOptions(object):
                             help='num of clusters')
         parser.add_argument('--remove_percent', type=float, default=0,
                             help='percent of the most similar to test samples from train')
+        parser.add_argument('--use_spectralnorm', action='store_true', default=False,
+                            help='apply or not spectral normalization to the last layer of MLP')
+        parser.add_argument('--n_power_iterations', type=int, default=1,
+                            help='number of power iterations for SN')
 
         # Arguments for balanced training
         parser.add_argument('--BT', type=str, default=None, help='Reweighting | Resampling | Downsampling')

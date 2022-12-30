@@ -106,6 +106,10 @@ class MLP(BaseModel):
             
             all_hidden_layers = [nn.Linear(args.emb_size, args.hidden_size)] + [nn.Linear(args.hidden_size, args.hidden_size) for _ in range(args.n_hidden-1)]
 
+            # add spectral norm, if necessary
+            if self.args.use_spectralnorm:
+                all_hidden_layers[-1] = torch.nn.utils.spectral_norm(all_hidden_layers[-1],
+                                                                     n_power_iterations=self.args.n_power_iterations)
             for _hidden_layer in all_hidden_layers:
                 hidden_layers.append(_hidden_layer)
                 if self.dropout is not None:
@@ -114,6 +118,7 @@ class MLP(BaseModel):
                     hidden_layers.append(self.BN)
                 if self.AF is not None:
                     hidden_layers.append(self.AF)
+
             return hidden_layers
 
     def get_cls_parameter(self):
