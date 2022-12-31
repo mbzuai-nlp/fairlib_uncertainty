@@ -107,10 +107,6 @@ class MLP(BaseModel):
             hidden_layers = nn.ModuleList()
             
             all_hidden_layers = [nn.Linear(args.emb_size, args.hidden_size)] + [nn.Linear(args.hidden_size, args.hidden_size) for _ in range(args.n_hidden-1)]
-            if args.spectral_norm:
-                print('\nUsing spectral normalized penultimate layer\n')
-                all_hidden_layers[-1] = torch.nn.utils.spectral_norm(all_hidden_layers[-1])
-
             # add spectral norm, if necessary
             if self.args.use_spectralnorm:
                 all_hidden_layers[-1] = torch.nn.utils.spectral_norm(all_hidden_layers[-1],
