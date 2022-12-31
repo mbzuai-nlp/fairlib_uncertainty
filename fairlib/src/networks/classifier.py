@@ -39,7 +39,7 @@ class MLP(BaseModel):
                 # Init the mapping for the augmentation layer
                 if self.args.gated_mapping is None:
                     # For each class init a discriminator component
-                    self.mapping = torch.eye(self.args.num_groups, requires_grad=False)
+                    self.mapping = torch.eye(self.args.num_groups, requires_grad=False).to(self.args.device)
                 else:
                     # self.mapping = torch.from_numpy(mapping, requires_grad=False)
                     raise NotImplementedError
@@ -61,6 +61,7 @@ class MLP(BaseModel):
 
         # Augmentation
         if self.args.gated and self.args.n_hidden > 0:
+            #group_label = group_label.to(input_data.device)
             assert group_label is not None, "Group labels are needed for augmentation"
 
             specific_output = self.augmentation_components(input_data, group_label)
@@ -85,6 +86,7 @@ class MLP(BaseModel):
             if self.args.gated and self.args.n_hidden > 0:
                 assert group_label is not None, "Group labels are needed for augmentation"
 
+                print(self.augmentation_components)
                 specific_output = self.augmentation_components(input_data, group_label)
 
                 main_output = main_output + specific_output
@@ -105,6 +107,9 @@ class MLP(BaseModel):
             hidden_layers = nn.ModuleList()
             
             all_hidden_layers = [nn.Linear(args.emb_size, args.hidden_size)] + [nn.Linear(args.hidden_size, args.hidden_size) for _ in range(args.n_hidden-1)]
+            if args.spectral_norm:
+                print('\nUsing spectral normalized penultimate layer\n')
+                all_hidden_layers[-1] = torch.nn.utils.spectral_norm(all_hidden_layers[-1])
 
             # add spectral norm, if necessary
             if self.args.use_spectralnorm:
@@ -120,7 +125,7 @@ class MLP(BaseModel):
                     hidden_layers.append(self.AF)
 
             return hidden_layers
-
+    
     def get_cls_parameter(self):
         parameters = []
         if self.args.adv_level == "output":
@@ -178,13 +183,21 @@ class BERTClassifier(BaseModel):
         print("Number of trainable parameters:", self.trainable_parameter_counting())
 
     def forward(self, input_data, mask=None, group_label = None):
-        bert_output = self.bert(input_data, encoder_attention_mask=mask.T)[1]
-        #bert_output = self.bert(input_data)[1]
+        if len(input_data.shape) < 2:
+            input_data = input_data.unsqueeze(0)
+        if (mask is not None) and (len(mask.shape) < 2):
+            mask = mask.unsqueeze(1)
+        
+        bert_output = self.bert(input_data, attention_mask=mask)[1]
         return self.classifier(bert_output, group_label)
     
-    def hidden(self, input_data, group_label = None):
-        bert_output = self.bert(input_data)[1]
-
+    def hidden(self, input_data, mask=None, group_label = None):
+        if len(input_data.shape) < 2:
+            input_data = input_data.unsqueeze(0)
+        if (mask is not None) and (len(mask.shape) < 2):
+            mask = mask.unsqueeze(1)
+            
+        bert_output = self.bert(input_data, attention_mask=mask)[1]
         return self.classifier.hidden(bert_output, group_label)
 
     def freeze_roberta_layers(self, number_of_layers):

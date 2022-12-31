@@ -92,5 +92,11 @@ def get_INLP_trade_offs(model, args):
             model = model, epoch_valid_loss = None,
             is_best = False, prefix = "INLP_checkpoint",
             )
+        _state = {
+            'classifier': classifier,
+            'P': P}
+        
+        filename = "INLP_checkpoint_epoch_cls{:.2f}".format(iteration) + '.pth.tar'
+        torch.save(_state, Path(model.args.model_dir) / filename)
 
     return None

@@ -50,7 +50,6 @@ def model_selection_parallel(
         checkpoint_dir=checkpoint_dir, 
         checkpoint_name=checkpoint_name, 
         model_id=model_id)
-
     exp_results = []
 
     if return_all:

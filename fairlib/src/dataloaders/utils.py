@@ -38,6 +38,9 @@ class BaseDataset(torch.utils.data.Dataset):
         self.regression_init()
         
         self.X = np.array(self.X)
+        if self.mask is not None:
+            self.mask = np.array(self.mask)
+            
         if len(self.X.shape) == 3:
             self.X = np.concatenate(list(self.X), axis=0)
         self.y = np.array(self.y).astype(int)
