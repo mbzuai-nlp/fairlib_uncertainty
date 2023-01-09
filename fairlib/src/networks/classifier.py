@@ -17,9 +17,15 @@ class MLP(BaseModel):
         self.args = args
         
         assert args.n_hidden >= 0, "n_hidden must be nonnegative"
-        
+
+        if args.n_hidden == 0:
+            output_layer_input = args.emb_size
+        elif args.use_skipconnection:
+            output_layer_input = args.hidden_size + args.emb_size
+        else:
+            output_layer_input = args.hidden_size
         self.output_layer = nn.Linear(
-            args.emb_size if args.n_hidden == 0 else args.hidden_size, 
+            output_layer_input, 
             args.num_classes if not args.regression else 1,
             )
 
@@ -68,7 +74,10 @@ class MLP(BaseModel):
 
             main_output = main_output + specific_output
 
-        output = self.output_layer(main_output)
+        if self.args.use_skipconnection:
+            output = self.output_layer(torch.cat((main_output, input_data), axis=-1))
+        else:
+            output = self.output_layer(main_output)
         return output
     
     def hidden(self, input_data, group_label = None):
