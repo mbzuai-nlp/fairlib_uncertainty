@@ -65,4 +65,7 @@ def save_checkpoint(
     # If this checkpoint is the best so far, store a copy so it doesn't get overwritten by a worse checkpoint
     if is_best:
         _state["model"]=model.state_dict()
-        torch.save(_state, Path(checkpoint_dir) / 'BEST_checkpoint.pth.tar')
+        if "INLP" in prefix:
+            torch.save(_state, Path(checkpoint_dir) / 'INLP_BEST_checkpoint.pth.tar')
+        else:
+            torch.save(_state, Path(checkpoint_dir) / 'BEST_checkpoint.pth.tar')
