@@ -14,6 +14,7 @@ from pathlib import Path
 import numpy as np
 
 from ...evaluators import present_evaluation_scores
+from ...evaluators.evaluator import gap_eval_scores
 import logging
 
 def load_trained_model(model, checkpoint_dir, device):
@@ -49,6 +50,7 @@ def get_INLP_trade_offs(model, args):
                                     by_class=by_class, Y_train_main=train_labels, Y_dev_main=dev_labels)
     
     rowspaces = P_n[1]
+    best_DTO = 100.0
 
     for iteration, p_iteration in enumerate(range(1, len(rowspaces))):
         
@@ -95,7 +97,21 @@ def get_INLP_trade_offs(model, args):
         _state = {
             'classifier': classifier,
             'P': P}
-        
+
+        # check if model is best by DTO on val set
+        valid_scores, valid_confusion_matrices = gap_eval_scores(
+            y_pred=dev_y_pred,
+            y_true=dev_labels if not args.regression else dev_regression_labels, 
+            protected_attribute=dev_private_labels,
+            args = model.args,
+        )
+        curr_DTO = np.sqrt((1 - valid_scores["accuracy"]) ** 2 + (valid_scores["TPR_GAP"]) ** 2)
+        if curr_DTO < best_DTO:
+            best_DTO = curr_DTO
+            logging.info("Saving best checkpoint!")
+            filename = "INLP_checkpoint_epoch_cls_BEST" + '.pth.tar'
+            torch.save(_state, Path(model.args.model_dir) / filename)
+
         filename = "INLP_checkpoint_epoch_cls{:.2f}".format(iteration) + '.pth.tar'
         torch.save(_state, Path(model.args.model_dir) / filename)
 
