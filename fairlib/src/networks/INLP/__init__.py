@@ -82,6 +82,18 @@ def get_INLP_trade_offs(model, args):
         test_y_pred= classifier.predict(debiased_x_test)
 
         logging.info("Evaluation at Epoch %d" % (iteration,))
+        # check if model is best by DTO on val set
+        valid_scores, valid_confusion_matrices = gap_eval_scores(
+            y_pred=dev_y_pred,
+            y_true=dev_labels if not args.regression else dev_regression_labels, 
+            protected_attribute=dev_private_labels,
+            args = model.args,
+        )
+        is_best = False
+        curr_DTO = np.sqrt((1 - valid_scores["accuracy"]) ** 2 + (valid_scores["TPR_GAP"]) ** 2)
+        if curr_DTO < best_DTO:
+            best_DTO = curr_DTO
+            is_best = True
 
         present_evaluation_scores(
             valid_preds = dev_y_pred, 
@@ -92,23 +104,13 @@ def get_INLP_trade_offs(model, args):
             test_private_labels = test_private_labels,
             epoch = iteration, epochs_since_improvement = None, 
             model = model, epoch_valid_loss = None,
-            is_best = False, prefix = "INLP_checkpoint",
+            is_best = is_best, prefix = "INLP_checkpoint",
             )
         _state = {
             'classifier': classifier,
             'P': P}
 
-        # check if model is best by DTO on val set
-        valid_scores, valid_confusion_matrices = gap_eval_scores(
-            y_pred=dev_y_pred,
-            y_true=dev_labels if not args.regression else dev_regression_labels, 
-            protected_attribute=dev_private_labels,
-            args = model.args,
-        )
-        curr_DTO = np.sqrt((1 - valid_scores["accuracy"]) ** 2 + (valid_scores["TPR_GAP"]) ** 2)
-        if curr_DTO < best_DTO:
-            best_DTO = curr_DTO
-            logging.info("Saving best checkpoint!")
+        if is_best:
             filename = "INLP_checkpoint_epoch_cls_BEST" + '.pth.tar'
             torch.save(_state, Path(model.args.model_dir) / filename)
 
