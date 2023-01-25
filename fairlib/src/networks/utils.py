@@ -5,7 +5,9 @@ from torch.optim import Adam
 import time
 from pathlib import Path
 from ..evaluators import print_network, present_evaluation_scores
+from ..evaluators.evaluator import gap_eval_scores
 import pandas as pd
+import numpy as np
 from sklearn.metrics import accuracy_score
 
 # train the main model with adv loss
@@ -323,6 +325,9 @@ class BaseModel(nn.Module):
         epochs_since_improvement = 0
         best_valid_loss = 1e+5
         best_valid_acc = 0
+        best_valid_dto = 1e+5
+        best_epoch = 0
+        valid_accs, valid_fairs = [], []
 
         for epoch in range(self.args.opt.epochs):
             
@@ -349,9 +354,38 @@ class BaseModel(nn.Module):
                 self.args.discriminator.train_self(self)
 
             epoch_valid_acc = accuracy_score(valid_labels, valid_preds)
+            # check DTO on validation with diff versions
+            # for that purpose calc model fairness
+            valid_scores, valid_confusion_matrices = gap_eval_scores(
+                y_pred=valid_preds,
+                y_true=valid_labels, 
+                protected_attribute=valid_private_labels,
+                args = self.args,
+            )
+            valid_accs.append(valid_scores["accuracy"])
+            valid_fairs.append((1 - valid_scores["TPR_GAP"]))
+            # calc vanilla dto, without any reweighting
+            epoch_valid_dto = np.sqrt((1 - valid_scores["accuracy"]) ** 2 + (valid_scores["TPR_GAP"]) ** 2)
+            # epoch_valid_dto = 0.0
             # Check if there was an improvement
-            is_best = epoch_valid_loss < best_valid_loss
-            best_valid_loss = min(epoch_valid_loss, best_valid_loss)
+            if self.args.early_stopping_criterion == "dto":
+                is_best = epoch_valid_dto < best_valid_dto
+                best_valid_dto = min(epoch_valid_dto, best_valid_dto)
+            elif self.args.early_stopping_criterion == "balanced_dto":
+                min_acc, max_acc = np.min(valid_accs), np.max(valid_accs)
+                min_fair, max_fair = np.min(valid_fairs), np.max(valid_fairs)
+                # now calc balanced dto - normalize accuracy and fairness on [0, 1] on all epochs
+                balanced_fairs = (np.array(valid_fairs) - np.min(valid_fairs)) / (np.max(valid_fairs) - np.min(valid_fairs))
+                balanced_accs = (np.array(valid_accs) - np.min(valid_accs)) / (np.max(valid_accs) - np.min(valid_accs))
+                epoch_valid_dto = np.sqrt((1 - balanced_accs[-1]) ** 2 + (1 - balanced_fairs[-1]) ** 2)
+                is_best = epoch_valid_dto < best_valid_dto
+                best_epoch = epoch if is_best else best_epoch
+                # we also have to renormalize best_valid_dto each time
+                best_valid_dto = np.sqrt((1 - balanced_accs[best_epoch]) ** 2 + (1 - balanced_fairs[best_epoch]) ** 2)
+                best_valid_dto = min(epoch_valid_dto, best_valid_dto)
+            else:
+                is_best = epoch_valid_loss < best_valid_loss
+                best_valid_loss = min(epoch_valid_loss, best_valid_loss)
             
             #is_best = epoch_valid_acc > best_valid_acc
             #best_valid_acc = max(epoch_valid_acc, best_valid_acc)
@@ -363,6 +397,7 @@ class BaseModel(nn.Module):
                 logging.info("Epochs since last improvement: %d" % (epochs_since_improvement,))
             else:
                 epochs_since_improvement = 0
+            logging.info("Loss, accuracy and DTO: %f %f %f" % (epoch_valid_loss, epoch_valid_acc, epoch_valid_dto))
 
             if epoch % self.args.checkpoint_interval == 0:
                 logging.info("Evaluation at Epoch %d" % (epoch,))

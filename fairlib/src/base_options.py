@@ -204,6 +204,8 @@ class BaseOptions(object):
                             help='logging level, e.g., DEBUG, INFO, WARNING, ERROR, CRITICAL')
         parser.add_argument('--conf_file', type=str, default=None,
                             help='path to the YAML file for reproduce an an experiment')
+        parser.add_argument('--early_stopping_criterion', type=str, default='loss',
+                            help='Criterion for early stopping - loss|dto|balanced_dto')
 
         # Regression related arguments
         parser.add_argument('--regression',  action='store_true', default=False, 
