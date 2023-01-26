@@ -59,13 +59,15 @@ def save_checkpoint(
         _state["dev_predictions"] = dev_predictions
     if test_predictions is not None:
         _state["test_predictions"] = test_predictions
-
-    filename = "{}_epoch{:.2f}".format(prefix, epoch) + '.pth.tar'
-    torch.save(_state, Path(checkpoint_dir) / filename)
+    if not("INLP_bdto" in prefix):
+        filename = "{}_epoch{:.2f}".format(prefix, epoch) + '.pth.tar'
+        torch.save(_state, Path(checkpoint_dir) / filename)
     # If this checkpoint is the best so far, store a copy so it doesn't get overwritten by a worse checkpoint
     if is_best:
         _state["model"]=model.state_dict()
-        if "INLP" in prefix:
+        if "INLP_bdto" in prefix:
+            torch.save(_state, Path(checkpoint_dir) / 'INLP_BEST_bdto_checkpoint.pth.tar')
+        elif "INLP" in prefix:
             torch.save(_state, Path(checkpoint_dir) / 'INLP_BEST_checkpoint.pth.tar')
         else:
             torch.save(_state, Path(checkpoint_dir) / 'BEST_checkpoint.pth.tar')
