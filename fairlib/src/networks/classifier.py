@@ -155,8 +155,8 @@ class MLP(BaseModel):
                 raise "not implemented yet"
 
 class BERTClassifier(BaseModel):
-    model_name = 'bert-base-cased'
-    n_freezed_layers = 12
+    model_name = 'bert-base-uncased'
+    n_freezed_layers = 0
 
     def __init__(self, args):
         super(BERTClassifier, self).__init__()
