@@ -372,16 +372,18 @@ class BaseModel(nn.Module):
                 is_best = epoch_valid_dto < best_valid_dto
                 best_valid_dto = min(epoch_valid_dto, best_valid_dto)
             elif self.args.early_stopping_criterion == "balanced_dto":
-                min_acc, max_acc = np.min(valid_accs), np.max(valid_accs)
-                min_fair, max_fair = np.min(valid_fairs), np.max(valid_fairs)
                 # now calc balanced dto - normalize accuracy and fairness on [0, 1] on all epochs
-                balanced_fairs = (np.array(valid_fairs) - np.min(valid_fairs)) / (np.max(valid_fairs) - np.min(valid_fairs))
-                balanced_accs = (np.array(valid_accs) - np.min(valid_accs)) / (np.max(valid_accs) - np.min(valid_accs))
+                if len(valid_accs) > 1:
+                    balanced_fairs = (np.array(valid_fairs) - np.min(valid_fairs)) / (np.max(valid_fairs) - np.min(valid_fairs))
+                    balanced_accs = (np.array(valid_accs) - np.min(valid_accs)) / (np.max(valid_accs) - np.min(valid_accs))
+                else:
+                    balanced_fairs = np.array(valid_fairs)
+                    balanced_accs = np.array(valid_accs)
                 epoch_valid_dto = np.sqrt((1 - balanced_accs[-1]) ** 2 + (1 - balanced_fairs[-1]) ** 2)
-                is_best = epoch_valid_dto < best_valid_dto
-                best_epoch = epoch if is_best else best_epoch
                 # we also have to renormalize best_valid_dto each time
                 best_valid_dto = np.sqrt((1 - balanced_accs[best_epoch]) ** 2 + (1 - balanced_fairs[best_epoch]) ** 2)
+                is_best = epoch_valid_dto < best_valid_dto
+                best_epoch = epoch if is_best else best_epoch
                 best_valid_dto = min(epoch_valid_dto, best_valid_dto)
             else:
                 is_best = epoch_valid_loss < best_valid_loss
