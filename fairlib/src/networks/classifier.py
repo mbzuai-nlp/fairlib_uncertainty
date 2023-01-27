@@ -181,7 +181,7 @@ class BERTClassifier(BaseModel):
         if len(input_data.shape) < 2:
             input_data = input_data.unsqueeze(0)
         if (mask is not None) and (len(mask.shape) < 2):
-            mask = mask.unsqueeze(1)
+            mask = mask.unsqueeze(0)
         
         bert_output = self.bert(input_data, attention_mask=mask)[1]
         return self.classifier(bert_output, group_label)
@@ -190,7 +190,7 @@ class BERTClassifier(BaseModel):
         if len(input_data.shape) < 2:
             input_data = input_data.unsqueeze(0)
         if (mask is not None) and (len(mask.shape) < 2):
-            mask = mask.unsqueeze(1)
+            mask = mask.unsqueeze(0)
             
         bert_output = self.bert(input_data, attention_mask=mask)[1]
         return self.classifier.hidden(bert_output, group_label)

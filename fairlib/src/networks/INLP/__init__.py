@@ -14,6 +14,7 @@ from pathlib import Path
 import numpy as np
 
 from ...evaluators import present_evaluation_scores
+from ...evaluators.evaluator import gap_eval_scores
 import logging
 
 def load_trained_model(model, checkpoint_dir, device):
@@ -49,7 +50,8 @@ def get_INLP_trade_offs(model, args):
                                     by_class=by_class, Y_train_main=train_labels, Y_dev_main=dev_labels)
     
     rowspaces = P_n[1]
-
+    best_DTO = 100.0
+    
     for iteration, p_iteration in enumerate(range(1, len(rowspaces))):
         
         P = get_projection_to_intersection_of_nullspaces(rowspaces[:p_iteration], input_dim=train_hidden.shape[1])
@@ -80,6 +82,18 @@ def get_INLP_trade_offs(model, args):
         test_y_pred= classifier.predict(debiased_x_test)
 
         logging.info("Evaluation at Epoch %d" % (iteration,))
+        
+        valid_scores, valid_confusion_matrices = gap_eval_scores(
+            y_pred=dev_y_pred,
+            y_true=dev_labels if not args.regression else dev_regression_labels, 
+            protected_attribute=dev_private_labels,
+            args = model.args,
+        )
+        is_best = False
+        curr_DTO = np.sqrt((1 - valid_scores["accuracy"]) ** 2 + (valid_scores["TPR_GAP"]) ** 2)
+        if curr_DTO < best_DTO:
+            best_DTO = curr_DTO
+            is_best = True
 
         present_evaluation_scores(
             valid_preds = dev_y_pred, 
@@ -95,6 +109,10 @@ def get_INLP_trade_offs(model, args):
         _state = {
             'classifier': classifier,
             'P': P}
+        
+        if is_best:
+            filename = "INLP_checkpoint_epoch_cls_BEST" + '.pth.tar'
+            torch.save(_state, Path(model.args.model_dir) / filename)
         
         filename = "INLP_checkpoint_epoch_cls{:.2f}".format(iteration) + '.pth.tar'
         torch.save(_state, Path(model.args.model_dir) / filename)
