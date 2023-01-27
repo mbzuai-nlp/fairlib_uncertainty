@@ -204,6 +204,8 @@ class BaseOptions(object):
                             help='logging level, e.g., DEBUG, INFO, WARNING, ERROR, CRITICAL')
         parser.add_argument('--conf_file', type=str, default=None,
                             help='path to the YAML file for reproduce an an experiment')
+        parser.add_argument('--early_stopping_criterion', type=str, default='loss',
+                            help='Criterion for early stopping - loss|dto|balanced_dto')
 
         # Regression related arguments
         parser.add_argument('--regression',  action='store_true', default=False, 
@@ -219,8 +221,6 @@ class BaseOptions(object):
                             help='number of hidden units for the main task classifier')
         parser.add_argument('--n_hidden',  type=int, default=2, 
                             help='number of hidden layers')
-        parser.add_argument('--spectral_norm',  action='store_true', default=False, 
-                            help='spectral norm in the penultimate layer')
         parser.add_argument('--dropout', type=float, default=0,
                             help='dropout probability')
         parser.add_argument('--emb_size', type=pos_int, default=2304,
@@ -235,6 +235,20 @@ class BaseOptions(object):
                             help='apply 1d batch norm to the model')
         parser.add_argument('--classification_head_update_frequency',  type=pos_int, default=1,
                             help='the update frequency of the main model classification head (every N batches)')
+        parser.add_argument('--subsample_perc', type=float, default=1.0,
+                            help='subsample percent for train split')
+        parser.add_argument('--num_remove_clusters', type=int, default=0,
+                            help='num of clusters to remove, should be less than num_clusters')
+        parser.add_argument('--num_clusters', type=int, default=0,
+                            help='num of clusters')
+        parser.add_argument('--remove_percent', type=float, default=0,
+                            help='percent of the most similar to test samples from train')
+        parser.add_argument('--use_spectralnorm', action='store_true', default=False,
+                            help='apply or not spectral normalization to the last layer of MLP')
+        parser.add_argument('--n_power_iterations', type=int, default=1,
+                            help='number of power iterations for SN')
+        parser.add_argument('--use_skipconnection', action='store_true', default=False,
+                            help='add skip connection from input to the last layer of MLP')
 
         # Arguments for balanced training
         parser.add_argument('--BT', type=str, default=None, help='Reweighting | Resampling | Downsampling')

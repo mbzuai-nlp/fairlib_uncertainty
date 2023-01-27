@@ -38,6 +38,9 @@ else:
         Bios_economy= data_dir + '/bios_gender_economy',
         Bios_both= data_dir + '/bios_gender_economy',
         FCL_Bios= data_dir + '/bios_gender_economy',
+        Trustpilot_gender= data_dir + r'\trustpilot',
+        Trustpilot_age= data_dir + r'\trustpilot',
+        Trustpilot_country= data_dir + r'\trustpilot',
     )
 
 

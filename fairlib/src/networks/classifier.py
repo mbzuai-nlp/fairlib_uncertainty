@@ -17,9 +17,15 @@ class MLP(BaseModel):
         self.args = args
         
         assert args.n_hidden >= 0, "n_hidden must be nonnegative"
-        
+
+        if args.n_hidden == 0:
+            output_layer_input = args.emb_size
+        elif args.use_skipconnection:
+            output_layer_input = args.hidden_size + args.emb_size
+        else:
+            output_layer_input = args.hidden_size
         self.output_layer = nn.Linear(
-            args.emb_size if args.n_hidden == 0 else args.hidden_size, 
+            output_layer_input, 
             args.num_classes if not args.regression else 1,
             )
 
@@ -68,7 +74,10 @@ class MLP(BaseModel):
 
             main_output = main_output + specific_output
 
-        output = self.output_layer(main_output)
+        if self.args.use_skipconnection:
+            output = self.output_layer(torch.cat((main_output, input_data), axis=-1))
+        else:
+            output = self.output_layer(main_output)
         return output
     
     def hidden(self, input_data, group_label = None):
@@ -107,10 +116,10 @@ class MLP(BaseModel):
             hidden_layers = nn.ModuleList()
             
             all_hidden_layers = [nn.Linear(args.emb_size, args.hidden_size)] + [nn.Linear(args.hidden_size, args.hidden_size) for _ in range(args.n_hidden-1)]
-            if args.spectral_norm:
-                print('\nUsing spectral normalized penultimate layer\n')
-                all_hidden_layers[-1] = torch.nn.utils.spectral_norm(all_hidden_layers[-1])
-
+            # add spectral norm, if necessary
+            if self.args.use_spectralnorm:
+                all_hidden_layers[-1] = torch.nn.utils.spectral_norm(all_hidden_layers[-1],
+                                                                     n_power_iterations=self.args.n_power_iterations)
             for _hidden_layer in all_hidden_layers:
                 hidden_layers.append(_hidden_layer)
                 if self.dropout is not None:
@@ -119,6 +128,7 @@ class MLP(BaseModel):
                     hidden_layers.append(self.BN)
                 if self.AF is not None:
                     hidden_layers.append(self.AF)
+
             return hidden_layers
     
     def get_cls_parameter(self):
@@ -145,8 +155,8 @@ class MLP(BaseModel):
                 raise "not implemented yet"
 
 class BERTClassifier(BaseModel):
-    model_name = 'bert-base-uncased'
-    n_freezed_layers = 0
+    model_name = 'bert-base-cased'
+    n_freezed_layers = 12
 
     def __init__(self, args):
         super(BERTClassifier, self).__init__()

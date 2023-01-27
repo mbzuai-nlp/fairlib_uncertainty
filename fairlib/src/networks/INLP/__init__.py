@@ -51,7 +51,11 @@ def get_INLP_trade_offs(model, args):
     
     rowspaces = P_n[1]
     best_DTO = 100.0
-    
+    valid_accs = []
+    valid_fairs = []
+    best_valid_dto = 1e+5
+    best_epoch = 0
+
     for iteration, p_iteration in enumerate(range(1, len(rowspaces))):
         
         P = get_projection_to_intersection_of_nullspaces(rowspaces[:p_iteration], input_dim=train_hidden.shape[1])
@@ -82,7 +86,8 @@ def get_INLP_trade_offs(model, args):
         test_y_pred= classifier.predict(debiased_x_test)
 
         logging.info("Evaluation at Epoch %d" % (iteration,))
-        
+
+        # check if model is best by DTO on val set
         valid_scores, valid_confusion_matrices = gap_eval_scores(
             y_pred=dev_y_pred,
             y_true=dev_labels if not args.regression else dev_regression_labels, 
@@ -104,16 +109,43 @@ def get_INLP_trade_offs(model, args):
             test_private_labels = test_private_labels,
             epoch = iteration, epochs_since_improvement = None, 
             model = model, epoch_valid_loss = None,
-            is_best = False, prefix = "INLP_checkpoint",
+            is_best = is_best, prefix = "INLP_checkpoint",
             )
         _state = {
             'classifier': classifier,
             'P': P}
-        
+
+        # also find best checkpoint by bdto
+        valid_accs.append(valid_scores["accuracy"])
+        valid_fairs.append((1 - valid_scores["TPR_GAP"]))
+        # now calc balanced dto - normalize accuracy and fairness on [0, 1] on all epochs
+        balanced_fairs = (np.array(valid_fairs) - np.min(valid_fairs)) / (np.max(valid_fairs) - np.min(valid_fairs))
+        balanced_accs = (np.array(valid_accs) - np.min(valid_accs)) / (np.max(valid_accs) - np.min(valid_accs))
+        epoch_valid_dto = np.sqrt((1 - balanced_accs[-1]) ** 2 + (1 - balanced_fairs[-1]) ** 2)
+        is_best_bdto = epoch_valid_dto < best_valid_dto
+        best_epoch = iteration if is_best else best_epoch
+        # we also have to renormalize best_valid_dto each time
+        best_valid_dto = np.sqrt((1 - balanced_accs[best_epoch]) ** 2 + (1 - balanced_fairs[best_epoch]) ** 2)
+        best_valid_dto = min(epoch_valid_dto, best_valid_dto)
+        if is_best_bdto:
+            # save both model and classifier
+            present_evaluation_scores(
+                valid_preds = dev_y_pred, 
+                valid_labels = dev_labels if not args.regression else dev_regression_labels, 
+                valid_private_labels = dev_private_labels,
+                test_preds = test_y_pred, 
+                test_labels = test_labels if not args.regression else test_regression_labels, 
+                test_private_labels = test_private_labels,
+                epoch = iteration, epochs_since_improvement = None, 
+                model = model, epoch_valid_loss = None,
+                is_best = is_best_bdto, prefix = "INLP_bdto_checkpoint",
+                )
+            filename = "INLP_bdto_checkpoint_epoch_cls_BEST" + '.pth.tar'
+            torch.save(_state, Path(model.args.model_dir) / filename)
         if is_best:
             filename = "INLP_checkpoint_epoch_cls_BEST" + '.pth.tar'
             torch.save(_state, Path(model.args.model_dir) / filename)
-        
+
         filename = "INLP_checkpoint_epoch_cls{:.2f}".format(iteration) + '.pth.tar'
         torch.save(_state, Path(model.args.model_dir) / filename)
 
