@@ -125,7 +125,7 @@ def get_INLP_trade_offs(model, args):
             balanced_accs = np.array(valid_accs)
         epoch_valid_dto = np.sqrt((1 - balanced_accs[-1]) ** 2 + (1 - balanced_fairs[-1]) ** 2)
         # we also have to renormalize best_valid_dto each time
-        if epoch > 0:
+        if iteration > 0:
             best_valid_dto = np.sqrt((1 - balanced_accs[best_epoch]) ** 2 + (1 - balanced_fairs[best_epoch]) ** 2)
         is_best_bdto = epoch_valid_dto < best_valid_dto
         best_epoch = iteration if is_best else best_epoch
