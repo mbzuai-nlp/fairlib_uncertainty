@@ -206,6 +206,8 @@ class BaseOptions(object):
                             help='path to the YAML file for reproduce an an experiment')
         parser.add_argument('--early_stopping_criterion', type=str, default='loss',
                             help='Criterion for early stopping - loss|dto|balanced_dto')
+        parser.add_argument('--n_freezed_layers', type=int, default=12,
+                            help='Number of freezed layer in BERT model')
 
         # Regression related arguments
         parser.add_argument('--regression',  action='store_true', default=False, 
