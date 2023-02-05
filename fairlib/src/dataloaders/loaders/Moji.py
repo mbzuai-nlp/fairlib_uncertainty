@@ -41,9 +41,22 @@ class DeepMojiDataset(BaseDataset):
                                                                         ):
                 with open(f'{self.args.data_dir}/{file}_text', "rb") as f:
                     texts = f.readlines()
-                texts = self.split_to_ids(texts)
-                texts = [text.decode('latin-1') for text in texts]
-                buf_x, buf_token_type_ids, buf_mask = self.args.text_encoder.encoder(texts)
+                decoded_texts = []
+                import emoji
+                for el in texts:
+                    try:
+                        # cause BERT couldn't handle emoji, transform it into text
+                        if self.args.deemojify == 1:
+                            decoded_texts.append(emoji.demojize(el.decode()))
+                        elif self.args.deemojify == 0:
+                            decoded_texts.append(el.decode())
+                        else:
+                            decoded_texts.append(el.decode('latin-1'))
+                    except:
+                        pass
+                decoded_texts = self.split_to_ids(decoded_texts)
+                #texts = [text.decode('utf8') for text in texts]
+                buf_x, buf_token_type_ids, buf_mask = self.args.text_encoder.encoder(decoded_texts)
                 self.X += buf_x[:class_n]
                 self.token_type_ids += buf_token_type_ids[:class_n]
                 self.mask += buf_mask[:class_n]
