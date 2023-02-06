@@ -32,7 +32,7 @@ def train_epoch(model, iterator, args, epoch):
             else:
                 mask = batch[6]
             mask = mask.float().to(args.device)
-            if len(mask.shape) > 1:
+            if len(mask.shape) > 1 and args.batch_size != 1:
                 mask = mask.squeeze()
 
         tags = batch[1].long()
@@ -193,7 +193,7 @@ def eval_epoch(model, iterator, args):
             else:
                 mask = batch[6]
             mask = mask.float().to(args.device)
-            if len(mask.shape) > 1:
+            if len(mask.shape) > 1 and args.batch_size != 1:
                 mask = mask.squeeze()
 
         text = text.to(device)

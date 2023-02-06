@@ -37,7 +37,6 @@ def get_dataloaders(args):
         else:
             train_data.remove_similar(test_data)
 
-
     # DataLoader Parameters
     train_dataloader_params = {
             'batch_size': args.batch_size,
@@ -48,6 +47,12 @@ def get_dataloaders(args):
             'batch_size': args.test_batch_size,
             'shuffle': False,
             'num_workers': args.num_workers}
+    if args.encoder_architecture == "BERT" and args.use_collator:
+        # use collator to reduce padding tokens
+        from .utils import BertCollatorWithPadding
+        collator = BertCollatorWithPadding(tokenizer=args.text_encoder.tokenizer)
+        eval_dataloader_params.update({'collate_fn': collator})
+        train_dataloader_params.update({'collate_fn': collator})
 
     # init dataloader
     training_generator = torch.utils.data.DataLoader(train_data, **train_dataloader_params)

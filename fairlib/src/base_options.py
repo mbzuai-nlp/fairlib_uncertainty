@@ -210,6 +210,8 @@ class BaseOptions(object):
                             help='Number of freezed layer in BERT model')
         parser.add_argument('--deemojify', type=int, default=0,
                             help='0 - utf8, 1 - utf8 + deemojify, 2 - latin-1')
+        parser.add_argument('--use_collator', action='store_true', default=False,
+                            help='Add padding dynamically or not')
 
         # Regression related arguments
         parser.add_argument('--regression',  action='store_true', default=False, 
