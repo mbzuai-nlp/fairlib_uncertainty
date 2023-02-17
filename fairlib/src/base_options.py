@@ -326,7 +326,7 @@ class BaseOptions(object):
                             help='if train the linear discriminator with reweighting')
         parser.add_argument("--INLP_by_class", action='store_true', default=False,
                             help="estimate the nullspace by_class")
-        parser.add_argument("--INLP_n", type=pos_int, default=300,
+        parser.add_argument("--INLP_n", type=pos_int, default=190,
                             help="the maximum number of null-space projection iteration")
         parser.add_argument("--INLP_min_acc", type=float, default=0.0,
                             help="ignore the iteration if the acc is lower than the threshold")
