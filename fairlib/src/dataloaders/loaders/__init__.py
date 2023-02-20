@@ -10,6 +10,7 @@ from .Adult import AdultDataset
 from .COMPAS import COMPASDataset
 from .imSitu import imSituDataset
 from .ColoredMNIST import MNISTDataset
+from .Jigsaw import JigsawDataset
 
 
 if sys.platform == "win32":
@@ -56,6 +57,7 @@ loader_map = {
     "compas":COMPASDataset,
     "imsitu":imSituDataset,
     "mnist":MNISTDataset,
+    "jigsaw":JigsawDataset,
 }
 
 def name2loader(args):

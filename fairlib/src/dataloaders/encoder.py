@@ -12,6 +12,6 @@ class text2id():
         else:
             raise NotImplementedError
     
-    def encoder(self, sample):
-        encodings = self.tokenizer(sample, max_length=128, truncation=True, padding='max_length')
+    def encoder(self, sample, max_length=128):
+        encodings = self.tokenizer(sample, max_length=max_length, truncation=True, padding='max_length')
         return encodings["input_ids"], encodings['token_type_ids'], encodings['attention_mask']
