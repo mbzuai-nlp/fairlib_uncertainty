@@ -379,10 +379,19 @@ class BaseModel(nn.Module):
                 else:
                     balanced_fairs = np.array(valid_fairs)
                     balanced_accs = np.array(valid_accs)
-                epoch_valid_dto = np.sqrt((1 - balanced_accs[-1]) ** 2 + (1 - balanced_fairs[-1]) ** 2)
+                if any(np.array(self.args.early_stopping_weights) != 1.0):
+                    weights = self.args.early_stopping_weights
+                    logging.info("Use WBDTO with weights: " + str(self.args.early_stopping_weights))
+                    epoch_valid_dto = np.sqrt(weights[0] * (1 - balanced_accs[-1]) ** 2 + weights[1] * (1 - balanced_fairs[-1]) ** 2)
+                else:
+                    epoch_valid_dto = np.sqrt((1 - balanced_accs[-1]) ** 2 + (1 - balanced_fairs[-1]) ** 2)
                 # we also have to renormalize best_valid_dto each time
                 if epoch > 0:
-                    best_valid_dto = np.sqrt((1 - balanced_accs[best_epoch]) ** 2 + (1 - balanced_fairs[best_epoch]) ** 2)
+                    if any(np.array(self.args.early_stopping_weights) != 1.0):
+                        weights = self.args.early_stopping_weights
+                        best_valid_dto = np.sqrt(weights[0] * (1 - balanced_accs[best_epoch]) ** 2 + weights[1] * (1 - balanced_fairs[best_epoch]) ** 2)
+                    else:
+                        best_valid_dto = np.sqrt((1 - balanced_accs[best_epoch]) ** 2 + (1 - balanced_fairs[best_epoch]) ** 2)
                 is_best = epoch_valid_dto < best_valid_dto
                 best_epoch = epoch if is_best else best_epoch
                 best_valid_dto = min(epoch_valid_dto, best_valid_dto)
