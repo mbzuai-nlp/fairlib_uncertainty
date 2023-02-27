@@ -3,6 +3,7 @@ import sys
 from.loaders import TestDataset, SampleDataset
 from .Moji import DeepMojiDataset
 from .Bios import BiosDataset
+from .RoB import RoBDataset
 from .Valence import ValenceDataset
 from .FCL_BiosDataset import FCL_BiosDataset
 from .Trustpilot import TrustpilotDataset
@@ -38,6 +39,7 @@ else:
         Bios_economy= data_dir + '/bios_gender_economy',
         Bios_both= data_dir + '/bios_gender_economy',
         FCL_Bios= data_dir + '/bios_gender_economy',
+        RoB_gender= data_dir + '/rob',
         Trustpilot_gender= data_dir + r'\trustpilot',
         Trustpilot_age= data_dir + r'\trustpilot',
         Trustpilot_country= data_dir + r'\trustpilot',
@@ -47,6 +49,7 @@ else:
 loader_map = {
     "moji":DeepMojiDataset,
     "bios":BiosDataset,
+    "rob":RoBDataset,
     "test":TestDataset,
     "sample":SampleDataset,
     "valence":ValenceDataset,
