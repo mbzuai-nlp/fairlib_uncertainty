@@ -205,7 +205,7 @@ class BaseOptions(object):
         parser.add_argument('--conf_file', type=str, default=None,
                             help='path to the YAML file for reproduce an an experiment')
         parser.add_argument('--early_stopping_criterion', type=str, default='loss',
-                            help='Criterion for early stopping - loss|dto|balanced_dto')
+                            help='Criterion for early stopping - loss|dto|balanced_dto|max_balanced_dto')
         parser.add_argument('--n_freezed_layers', type=int, default=12,
                             help='Number of freezed layer in BERT model')
         parser.add_argument('--deemojify', type=int, default=0,

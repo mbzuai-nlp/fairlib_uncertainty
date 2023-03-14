@@ -371,11 +371,15 @@ class BaseModel(nn.Module):
             if self.args.early_stopping_criterion == "dto":
                 is_best = epoch_valid_dto < best_valid_dto
                 best_valid_dto = min(epoch_valid_dto, best_valid_dto)
-            elif self.args.early_stopping_criterion == "balanced_dto":
+            elif self.args.early_stopping_criterion in ["balanced_dto", "max_balanced_dto"]:
                 # now calc balanced dto - normalize accuracy and fairness on [0, 1] on all epochs
                 if len(valid_accs) > 1:
-                    balanced_fairs = (np.array(valid_fairs) - np.min(valid_fairs)) / (np.max(valid_fairs) - np.min(valid_fairs))
-                    balanced_accs = (np.array(valid_accs) - np.min(valid_accs)) / (np.max(valid_accs) - np.min(valid_accs))
+                    if self.args.early_stopping_criterion == "balanced_dto":
+                        balanced_fairs = (np.array(valid_fairs) - np.min(valid_fairs)) / (np.max(valid_fairs) - np.min(valid_fairs))
+                        balanced_accs = (np.array(valid_accs) - np.min(valid_accs)) / (np.max(valid_accs) - np.min(valid_accs))
+                    else:
+                        balanced_fairs = np.array(valid_fairs) / np.max(valid_fairs)
+                        balanced_accs = np.array(valid_accs) / np.max(valid_accs)
                 else:
                     balanced_fairs = np.array(valid_fairs)
                     balanced_accs = np.array(valid_accs)
