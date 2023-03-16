@@ -39,13 +39,13 @@ def mkdir(path):
         
         
 def kfold_train_dev(state):
-    X = np.concatenate([state.opt.train_generator.dataset.X, state.opt.dev_generator.dataset.X])[:100]
-    y = np.concatenate([state.opt.train_generator.dataset.y, state.opt.dev_generator.dataset.y])[:100]
-    protected_label = np.concatenate([state.opt.train_generator.dataset.protected_label, state.opt.dev_generator.dataset.protected_label])[:100]
+    X = np.concatenate([state.opt.train_generator.dataset.X, state.opt.dev_generator.dataset.X])
+    y = np.concatenate([state.opt.train_generator.dataset.y, state.opt.dev_generator.dataset.y])
+    protected_label = np.concatenate([state.opt.train_generator.dataset.protected_label, state.opt.dev_generator.dataset.protected_label])
 
     if state.encoder_architecture=="BERT":
-        token_type_ids = np.concatenate([state.opt.train_generator.dataset.token_type_ids, state.opt.dev_generator.dataset.token_type_ids])[:100]
-        mask = np.concatenate([state.opt.train_generator.dataset.mask, state.opt.dev_generator.dataset.mask])[:100]
+        token_type_ids = np.concatenate([state.opt.train_generator.dataset.token_type_ids, state.opt.dev_generator.dataset.token_type_ids])
+        mask = np.concatenate([state.opt.train_generator.dataset.mask, state.opt.dev_generator.dataset.mask])
         
     kf = KFold(n_splits=5, random_state=state.base_seed, shuffle=True)
     for i, (train_index, dev_index) in enumerate(kf.split(X)):
