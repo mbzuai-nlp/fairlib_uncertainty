@@ -156,11 +156,11 @@ class MLP(BaseModel):
 
 class BERTClassifier(BaseModel):
     model_name = 'bert-base-uncased'
-    n_freezed_layers = 0
 
     def __init__(self, args):
         super(BERTClassifier, self).__init__()
         self.args = args
+        self.n_freezed_layers = self.args.n_freezed_layers
 
         self.bert = BertModel.from_pretrained(self.model_name)
 

@@ -208,6 +208,8 @@ class BaseOptions(object):
                             help='Criterion for early stopping - loss|dto|balanced_dto')
         parser.add_argument('--group_agg_power', type=int, default=None,
                             help='Function for aggregation GAPs - 1|2|None')
+        parser.add_argument('--n_freezed_layers', type=int, default=0,
+                            help='Number of freezed layer in BERT model')
 
         # Regression related arguments
         parser.add_argument('--regression',  action='store_true', default=False, 
