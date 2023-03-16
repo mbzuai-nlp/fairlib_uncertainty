@@ -51,7 +51,8 @@ def present_evaluation_scores(
         test_confusion_matrices = test_confusion_matrices,
         is_best = is_best,
         checkpoint_dir = model.args.model_dir,
-        prefix = prefix,)
+        prefix = prefix,
+        fold=model.args.cross_val_fold)
 
     validation_results = ["{}: {:2.2f}\t".format(k, 100.*valid_scores[k]) for k in valid_scores.keys()]
     logging.info(('Validation {}').format("".join(validation_results)))

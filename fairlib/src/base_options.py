@@ -210,6 +210,10 @@ class BaseOptions(object):
                             help='Function for aggregation GAPs - 1|2|None')
         parser.add_argument('--n_freezed_layers', type=int, default=0,
                             help='Number of freezed layer in BERT model')
+        parser.add_argument('--cross_val', type=bool, default=False,
+                            help='Use KFold cross validation')
+        parser.add_argument('--cross_val_fold', type=int, default=None,
+                            help='current fold in cross validation')
 
         # Regression related arguments
         parser.add_argument('--regression',  action='store_true', default=False, 

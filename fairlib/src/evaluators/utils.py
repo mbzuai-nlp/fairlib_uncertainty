@@ -23,7 +23,7 @@ def save_checkpoint(
     epoch, epochs_since_improvement, model, loss, dev_evaluations,
     valid_confusion_matrices, test_confusion_matrices,
     test_evaluations, is_best, checkpoint_dir, prefix = "checkpoint",
-    dev_predictions=None, test_predictions=None):
+    dev_predictions=None, test_predictions=None, fold=None):
     """save check points to a specified file.
 
     Args:
@@ -55,19 +55,21 @@ def save_checkpoint(
         'test_evaluations': test_evaluations
         }
 
+    fold_name = f"_fold_{fold}" if fold is not None else ""
     if dev_predictions is not None:
         _state["dev_predictions"] = dev_predictions
     if test_predictions is not None:
         _state["test_predictions"] = test_predictions
     if not("INLP_bdto" in prefix):
-        filename = "{}_epoch{:.2f}".format(prefix, epoch) + '.pth.tar'
+        filename = "{}_epoch{:.2f}{}".format(prefix, epoch, fold_name) + '.pth.tar'
         torch.save(_state, Path(checkpoint_dir) / filename)
     # If this checkpoint is the best so far, store a copy so it doesn't get overwritten by a worse checkpoint
+    
     if is_best:
         _state["model"]=model.state_dict()
         if "INLP_bdto" in prefix:
-            torch.save(_state, Path(checkpoint_dir) / 'INLP_BEST_bdto_checkpoint.pth.tar')
+            torch.save(_state, Path(checkpoint_dir) / 'INLP_BEST_bdto_checkpoint{}.pth.tar'.format(fold_name))
         elif "INLP" in prefix:
-            torch.save(_state, Path(checkpoint_dir) / 'INLP_BEST_checkpoint.pth.tar')
+            torch.save(_state, Path(checkpoint_dir) / 'INLP_BEST_checkpoint{}.pth.tar'.format(fold_name))
         else:
-            torch.save(_state, Path(checkpoint_dir) / 'BEST_checkpoint.pth.tar')
+            torch.save(_state, Path(checkpoint_dir) / 'BEST_checkpoint{}.pth.tar'.format(fold_name))
