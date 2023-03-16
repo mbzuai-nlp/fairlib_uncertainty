@@ -117,7 +117,7 @@ def Aggregation_GAP(distinct_groups, all_scores, metric="TPR", group_agg_power =
     if group_agg_power is None:
         score_gaps = np.sum(abs(score_gaps),axis=1)
     else:
-        score_gaps =power_mean(score_gaps,p=group_agg_power,axis=1)
+        score_gaps = power_mean(score_gaps,p=group_agg_power,axis=1)
     # Aggregate gaps of each class, RMS by default
     score_gaps = power_mean(score_gaps, class_agg_power)
 
@@ -147,7 +147,7 @@ def Aggregation_Ratio(distinct_groups, all_scores, metric="TPR", group_agg_power
     score_ratios = Scores / all_scores["overall"][metric].reshape(-1,1)
     # Sum over ratios of all protected groups within each class
     if group_agg_power is None:
-        score_ratios = np.sum(abs(score_ratios),axis=1)
+        score_ratios = np.mean(abs(score_ratios),axis=1)
     else:
         score_ratios =power_mean(score_ratios,p=group_agg_power,axis=1)
     # Aggregate ratios of each class, RMS by default
@@ -202,12 +202,12 @@ def gap_eval_scores(y_pred, y_true, protected_attribute, metrics=["TPR","FPR","P
     # Group scores
     distinct_groups = [i for i in range(len(set(protected_attribute)))]
     for gid in distinct_groups:
-        group_identifier = (protected_attribute ==gid)
+        group_identifier = (protected_attribute == gid)
         group_confusion_matrix = confusion_matrix(y_true=y_true[group_identifier], y_pred=y_pred[group_identifier], labels=distinct_labels)
         confusion_matrices[gid] = group_confusion_matrix
         all_scores[gid] = confusion_matrix_based_scores(group_confusion_matrix)
 
     for _metric in metrics:
-        eval_scores["{}_GAP".format(_metric)] = Aggregation_GAP(distinct_groups=distinct_groups, all_scores=all_scores, metric=_metric)
-
+        eval_scores["{}_GAP".format(_metric)] = Aggregation_GAP(distinct_groups=distinct_groups, all_scores=all_scores, metric=_metric, group_agg_power=args.group_agg_power)
+    
     return eval_scores, confusion_matrices

@@ -7,11 +7,13 @@ from . import Adult
 from . import MSCOCO
 from . import imSitu
 from . import RoB
+from . import sepsis
 
 name2class = {
     "moji":moji,
     "bios":bios,
     "rob":RoB,
+    "sepsis":sepsis,
     "coloredmnist":coloredMNIST,
     "compas":COMPAS,
     "tp_pos":TP_POS,
