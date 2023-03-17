@@ -16,9 +16,14 @@ def main():
     options = BaseOptions()
     state = options.get_state()
     if state.cross_val:
-        for i, fold_state in kfold_train_dev(state):
+        for i, (train_idx, dev_idx) in kfold_train_dev(state):
+            args = {"cross_val_fold": i, 
+                    "train_idx": train_idx,
+                    "dev_idx": dev_idx}
+            fold_options = BaseOptions()
+            fold_state = fold_options.get_state(args=args)
+            
             # Init the model
-            fold_state.cross_val_fold = i
             model = networks.get_main_model(fold_state)
             logging.info(f'Fold {i}: Model Initialized!')
 

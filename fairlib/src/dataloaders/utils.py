@@ -58,7 +58,6 @@ class BaseDataset(torch.utils.data.Dataset):
         if self.split == "train":
             self.adv_decoupling()
 
-
         print("Loaded data shapes: {}, {}, {}".format(self.X.shape, self.y.shape, self.protected_label.shape))
 
     def __len__(self):
