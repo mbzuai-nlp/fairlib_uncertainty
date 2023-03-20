@@ -14,6 +14,20 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 
 
+def load_yaml_by_lines(file):
+    lines = []
+    idx_data = False
+    for line in file:
+        if line[0].isalpha():
+            idx_data = False
+        if line.startswith('dev_idx') or line.startswith('train_idx') or idx_data:
+            idx_data = True
+            continue
+        lines.append(line)
+    data = yaml.load('\n'.join(lines), Loader=SafeLoader)
+    return data
+
+
 def mkdirs(paths):
     """make a set of new directories
 
@@ -125,9 +139,12 @@ def get_dir(results_dir, project_dir, checkpoint_dir, checkpoint_name, model_id)
                 _dirs = Path(os.path.join(root, dir))
 
                 # Open the file and load the file
-                with open(_dirs / 'opt.yaml') as f:
-                    _opt = yaml.load(f, Loader=SafeLoader)
-                
+                try:
+                    with open(_dirs / 'opt.yaml') as f:
+                        _opt = yaml.load(f, Loader=SafeLoader)
+                except:
+                    with open(_dirs / 'opt.yaml') as f:
+                        _opt = load_yaml_by_lines(f)
                 _checkpoints_dirs = []
                 for root2, dirs2, files2 in os.walk(_dirs / checkpoint_dir):
                     for file2 in files2:

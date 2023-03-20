@@ -42,7 +42,10 @@ def get_dataloaders(args):
         X = np.concatenate([train_data.X, dev_data.X])
         y = np.concatenate([train_data.y, dev_data.y])
         protected_label = np.concatenate([train_data.protected_label, dev_data.protected_label])
-
+        instance_weights = np.concatenate([train_data.instance_weights, dev_data.instance_weights])
+        adv_instance_weights = np.concatenate([train_data.adv_instance_weights, dev_data.adv_instance_weights])
+        regression_label = np.concatenate([train_data.regression_label, dev_data.regression_label])
+        
         if args.encoder_architecture == "BERT":
             token_type_ids = np.concatenate([train_data.token_type_ids, dev_data.token_type_ids])
             mask = np.concatenate([train_data.mask, dev_data.mask])
@@ -50,6 +53,9 @@ def get_dataloaders(args):
         train_data.X, dev_data.X = X[args.train_idx], X[args.dev_idx]
         train_data.y, dev_data.y = y[args.train_idx], y[args.dev_idx]
         train_data.protected_label, dev_data.protected_label = protected_label[args.train_idx], protected_label[args.dev_idx]
+        train_data.instance_weights, dev_data.instance_weights = instance_weights[args.train_idx], instance_weights[args.dev_idx]
+        train_data.adv_instance_weights, dev_data.adv_instance_weights = adv_instance_weights[args.train_idx], adv_instance_weights[args.dev_idx]
+        train_data.regression_label, dev_data.regression_label = regression_label[args.train_idx], regression_label[args.dev_idx]
 
         if args.encoder_architecture=="BERT":
             train_data.token_type_ids, dev_data.token_type_ids = token_type_ids[args.train_idx], token_type_ids[args.dev_idx]

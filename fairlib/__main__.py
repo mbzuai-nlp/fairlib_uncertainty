@@ -21,7 +21,7 @@ def main():
                     "train_idx": train_idx,
                     "dev_idx": dev_idx}
             fold_options = BaseOptions()
-            fold_state = fold_options.get_state(args=args)
+            fold_state = fold_options.get_state(args=args, silence=True)
             
             # Init the model
             model = networks.get_main_model(fold_state)
@@ -37,18 +37,19 @@ def main():
 
             logging.info(f'Fold {i}: Finished!')
 
-    # Init the model
-    model = networks.get_main_model(state)
-    # state.opt.main_model = model
-    logging.info('Model Initialized!')
+    else:
+        # Init the model
+        model = networks.get_main_model(state)
+        # state.opt.main_model = model
+        logging.info('Model Initialized!')
 
-    model.train_self()
-    logging.info('Model Trained!')
+        model.train_self()
+        logging.info('Model Trained!')
 
-    if state.INLP:
-        logging.info('Run INLP')
-        from src.networks.INLP import get_INLP_trade_offs
-        get_INLP_trade_offs(model, state)
+        if state.INLP:
+            logging.info('Run INLP')
+            from src.networks.INLP import get_INLP_trade_offs
+            get_INLP_trade_offs(model, state)
 
     logging.info('Finished!')
 

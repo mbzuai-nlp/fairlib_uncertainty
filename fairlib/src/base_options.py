@@ -213,7 +213,7 @@ class BaseOptions(object):
         parser.add_argument('--cross_val', type=bool, default=False,
                             help='Use KFold cross validation')
         parser.add_argument('--cross_val_fold', type=int, default=None,
-                            help='current fold in train_idx validation')
+                            help='current fold in cross validation')
         parser.add_argument('--cross_val_n_splits', type=int, default=5,
                             help='nomber of folds in cross validation')
         parser.add_argument('--train_idx', type=np.ndarray, default=None,
