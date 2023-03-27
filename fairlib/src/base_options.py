@@ -215,6 +215,17 @@ class BaseOptions(object):
         # here we use an array instead of single value, so we could easily add more criteria in future
         parser.add_argument('--early_stopping_weights', type=float, nargs="+", default=[1.0,1.0],
                             help='Weights for balanced_dto early stopping criterion - for perf and fairness')
+        # Regularization params
+        parser.add_argument('--ue_regularizer', type=str, default=None,
+                            help='ue regularizer, CER|RAU|Metric')
+        parser.add_argument('--reg_lamb', type=float, default=0.0,
+                            help='regularization lambda')
+        parser.add_argument('--unc_thr', type=float, default=0.0,
+                            help='regularization uncertainty threshold, for RAU-loss')
+        parser.add_argument('--reg_lamb_intra', type=float, default=0.0,
+                            help='regularization lambda inner, for Metric loss')
+        parser.add_argument('--reg_margin', type=float, default=0.0,
+                            help='regularization margin, for Metric loss')
 
         # Regression related arguments
         parser.add_argument('--regression',  action='store_true', default=False, 

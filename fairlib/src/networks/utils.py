@@ -6,9 +6,25 @@ import time
 from pathlib import Path
 from ..evaluators import print_network, present_evaluation_scores
 from ..evaluators.evaluator import gap_eval_scores
+from ..networks.ue_regularizers import compute_loss_cer, RAU_loss, compute_loss_metric
 import pandas as pd
 import numpy as np
 from sklearn.metrics import accuracy_score
+
+
+def get_hiddens(args, model, batch, text, mask, p_tags):
+    if args.gated:
+        if len(batch) == 7:
+            hs = model.hidden(text, mask, p_tags)
+        else:
+            hs = model.hidden(text, p_tags)
+    else:
+        if len(batch) == 7:
+            hs = model.hidden(text, mask)
+        else:
+            hs = model.hidden(text)
+    return hs
+
 
 # train the main model with adv loss
 def train_epoch(model, iterator, args, epoch):
@@ -124,6 +140,16 @@ def train_epoch(model, iterator, args, epoch):
                 regression_tags = None if not args.regression else regression_tags,
                 )
 
+        if args.ue_regularizer == "CER":
+            loss = compute_loss_cer(predictions, tags, loss, args.reg_lamb)
+        elif args.ue_regularizer == "RAU":
+            probs = torch.softmax(predictions, axis=-1)
+            loss += RAU_loss(probs, tags, args.unc_thr)
+        elif args.ue_regularizer == "Metric":
+            hs_mask = mask if len(batch) == 7 else None
+            hiddens = get_hiddens(args, model, batch, text, hs_mask, p_tags)
+            loss = compute_loss_metric(hiddens, tags, loss, args.num_classes,
+                                       args.reg_margin, args.reg_lamb_intra, args.reg_lamb)
         loss.backward()
 
         # Zero gradients of the cls head 
