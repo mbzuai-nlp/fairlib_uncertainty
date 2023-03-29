@@ -144,7 +144,7 @@ def train_epoch(model, iterator, args, epoch):
             loss = compute_loss_cer(predictions, tags, loss, args.reg_lamb)
         elif args.ue_regularizer == "RAU":
             probs = torch.softmax(predictions, axis=-1)
-            loss += RAU_loss(probs, tags, args.unc_thr)
+            loss += args.reg_lamb * RAU_loss(probs, tags, args.unc_thr)
         elif args.ue_regularizer == "Metric":
             hs_mask = mask if len(batch) == 7 else None
             hiddens = get_hiddens(args, model, batch, text, hs_mask, p_tags)
