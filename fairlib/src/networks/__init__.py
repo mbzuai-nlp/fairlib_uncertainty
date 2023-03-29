@@ -2,6 +2,7 @@ import sys
 import torch
 import logging
 from .classifier import MLP, BERTClassifier,ConvNet
+from .ue_regularizers import compute_loss_cer, RAU_loss, compute_loss_metric
 from . import utils
 from . import INLP
 from . import FairCL

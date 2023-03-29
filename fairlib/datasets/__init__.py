@@ -8,6 +8,8 @@ from . import MSCOCO
 from . import imSitu
 from . import RoB
 from . import sepsis
+from . import jigsaw
+
 
 name2class = {
     "moji":moji,
@@ -20,6 +22,7 @@ name2class = {
     "adult":Adult,
     "coco":MSCOCO,
     "imsitu":imSitu,
+    "jigsaw":jigsaw,
 }
 
 def prepare_dataset(name, dest_folder,batch_size=32):

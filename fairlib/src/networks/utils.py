@@ -6,9 +6,25 @@ import time
 from pathlib import Path
 from ..evaluators import print_network, present_evaluation_scores
 from ..evaluators.evaluator import gap_eval_scores
+from ..networks.ue_regularizers import compute_loss_cer, RAU_loss, compute_loss_metric
 import pandas as pd
 import numpy as np
 from sklearn.metrics import accuracy_score
+
+
+def get_hiddens(args, model, batch, text, mask, p_tags):
+    if args.gated:
+        if len(batch) == 7:
+            hs = model.hidden(text, mask, p_tags)
+        else:
+            hs = model.hidden(text, p_tags)
+    else:
+        if len(batch) == 7:
+            hs = model.hidden(text, mask)
+        else:
+            hs = model.hidden(text)
+    return hs
+
 
 # train the main model with adv loss
 def train_epoch(model, iterator, args, epoch):
@@ -32,7 +48,7 @@ def train_epoch(model, iterator, args, epoch):
             else:
                 mask = batch[6]
             mask = mask.float().to(args.device)
-            if len(mask.shape) > 1:
+            if len(mask.shape) > 1 and args.batch_size != 1:
                 mask = mask.squeeze()
 
         tags = batch[1].long()
@@ -124,6 +140,16 @@ def train_epoch(model, iterator, args, epoch):
                 regression_tags = None if not args.regression else regression_tags,
                 )
 
+        if args.ue_regularizer == "CER":
+            loss = compute_loss_cer(predictions, tags, loss, args.reg_lamb)
+        elif args.ue_regularizer == "RAU":
+            probs = torch.softmax(predictions, axis=-1)
+            loss += RAU_loss(probs, tags, args.unc_thr)
+        elif args.ue_regularizer == "Metric":
+            hs_mask = mask if len(batch) == 7 else None
+            hiddens = get_hiddens(args, model, batch, text, hs_mask, p_tags)
+            loss = compute_loss_metric(hiddens, tags, loss, args.num_classes,
+                                       args.reg_margin, args.reg_lamb_intra, args.reg_lamb)
         loss.backward()
 
         # Zero gradients of the cls head 
@@ -193,7 +219,7 @@ def eval_epoch(model, iterator, args):
             else:
                 mask = batch[6]
             mask = mask.float().to(args.device)
-            if len(mask.shape) > 1:
+            if len(mask.shape) > 1 and args.batch_size != 1:
                 mask = mask.squeeze()
 
         text = text.to(device)
@@ -371,22 +397,31 @@ class BaseModel(nn.Module):
             if self.args.early_stopping_criterion == "dto":
                 is_best = epoch_valid_dto < best_valid_dto
                 best_valid_dto = min(epoch_valid_dto, best_valid_dto)
-            elif self.args.early_stopping_criterion == "balanced_dto":
-                min_acc, max_acc = np.min(valid_accs), np.max(valid_accs)
-                min_fair, max_fair = np.min(valid_fairs), np.max(valid_fairs)
+            elif self.args.early_stopping_criterion in ["balanced_dto", "max_balanced_dto"]:
                 # now calc balanced dto - normalize accuracy and fairness on [0, 1] on all epochs
                 if len(valid_accs) > 1:
-                    balanced_fairs = (np.array(valid_fairs) - np.min(valid_fairs)) / (np.max(valid_fairs) - np.min(valid_fairs))
-                    balanced_accs = (np.array(valid_accs) - np.min(valid_accs)) / (np.max(valid_accs) - np.min(valid_accs))
+                    if self.args.early_stopping_criterion == "balanced_dto":
+                        balanced_fairs = (np.array(valid_fairs) - np.min(valid_fairs)) / (np.max(valid_fairs) - np.min(valid_fairs))
+                        balanced_accs = (np.array(valid_accs) - np.min(valid_accs)) / (np.max(valid_accs) - np.min(valid_accs))
+                    else:
+                        balanced_fairs = np.array(valid_fairs) / np.max(valid_fairs)
+                        balanced_accs = np.array(valid_accs) / np.max(valid_accs)
                 else:
                     balanced_fairs = np.array(valid_fairs)
                     balanced_accs = np.array(valid_accs)
-                    
+                if any(np.array(self.args.early_stopping_weights) != 1.0):
+                    weights = self.args.early_stopping_weights
+                    logging.info("Use WBDTO with weights: " + str(self.args.early_stopping_weights))
+                    epoch_valid_dto = np.sqrt(weights[0] * (1 - balanced_accs[-1]) ** 2 + weights[1] * (1 - balanced_fairs[-1]) ** 2)
+                else:
+                    epoch_valid_dto = np.sqrt((1 - balanced_accs[-1]) ** 2 + (1 - balanced_fairs[-1]) ** 2)
                 # we also have to renormalize best_valid_dto each time
                 if epoch > 0:
-                    best_valid_dto = np.sqrt((1 - balanced_accs[best_epoch]) ** 2 + (1 - balanced_fairs[best_epoch]) ** 2)
-                epoch_valid_dto = np.sqrt((1 - balanced_accs[-1]) ** 2 + (1 - balanced_fairs[-1]) ** 2)
-                
+                    if any(np.array(self.args.early_stopping_weights) != 1.0):
+                        weights = self.args.early_stopping_weights
+                        best_valid_dto = np.sqrt(weights[0] * (1 - balanced_accs[best_epoch]) ** 2 + weights[1] * (1 - balanced_fairs[best_epoch]) ** 2)
+                    else:
+                        best_valid_dto = np.sqrt((1 - balanced_accs[best_epoch]) ** 2 + (1 - balanced_fairs[best_epoch]) ** 2)
                 is_best = epoch_valid_dto < best_valid_dto
                 best_epoch = epoch if is_best else best_epoch
                 best_valid_dto = min(epoch_valid_dto, best_valid_dto)

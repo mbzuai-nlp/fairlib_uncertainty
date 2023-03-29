@@ -20,6 +20,24 @@ def full_label_data(df, tasks):
         selected_rows = selected_rows & df[task].notnull().to_numpy()
     return selected_rows
 
+
+class BertCollatorWithPadding:
+    def __init__(self, tokenizer):
+        """Works mostly like DataCollatorWithPadding in transformers,
+        but supports some task-specific features.
+        """
+        self.tokenizer = tokenizer
+
+    def __call__(self, features):
+        array_feats = np.array(features)
+        encodings = self.tokenizer(list(array_feats[:,0]), max_length=128,
+                                   truncation=True, padding=True, return_tensors="pt")
+        results = [encodings["input_ids"]] +\
+            [torch.tensor(array_feats[:,idx].astype(int)) for idx in range(1,6)] +\
+            [encodings['attention_mask']]
+        return results
+        
+
 class BaseDataset(torch.utils.data.Dataset):
     def __init__(self, args, split):
         self.args = args
