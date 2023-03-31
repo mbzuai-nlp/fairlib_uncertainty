@@ -5,17 +5,17 @@ import pickle
 from tqdm import tqdm
 
 class BERT_encoder:
-    def __init__(self, batch_size=128) -> None:
+    def __init__(self, batch_size=128, model_name='bert-base-cased') -> None:
         self.batch_size = batch_size
-        self.model, self.tokenizer = self.load_lm()
+        self.model, self.tokenizer = self.load_lm(model_name=model_name)
 
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
         self.model = self.model.to(self.device)
 
     
-    def load_lm(self):
-        model_class, tokenizer_class, pretrained_weights = (BertModel, BertTokenizer, 'bert-base-uncased')
+    def load_lm(self, model_name):
+        model_class, tokenizer_class, pretrained_weights = (BertModel, BertTokenizer, model_name)
         tokenizer = tokenizer_class.from_pretrained(pretrained_weights)
         model = model_class.from_pretrained(pretrained_weights)
         return model, tokenizer

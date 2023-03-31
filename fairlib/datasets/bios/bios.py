@@ -22,10 +22,11 @@ class Bios:
     _NAME = "Bios"
     _SPLITS = ["train", "dev", "test"]
 
-    def __init__(self, dest_folder, batch_size):
+    def __init__(self, dest_folder, batch_size, model_name):
         self.dest_folder = dest_folder
         self.batch_size = batch_size
-        self.encoder = BERT_encoder(self.batch_size)
+        self.model_name = model_name
+        self.encoder = BERT_encoder(self.batch_size, self.model_name)
 
     def download_files(self):
         return
