@@ -167,7 +167,7 @@ class BaseOptions(object):
                             help='experiment id')
         parser.add_argument('--encoder_architecture', type=str, default="Fixed",
                             help='Fixed | BERT | DeepMoji')
-        parser.add_argument('--model_name', type=int, default='bert-base-cased',
+        parser.add_argument('--model_name', type=str, default='bert-base-cased',
                             help='BERT version from HuggingFace')
         parser.add_argument('--batch_size', type=pos_int, default=1024,
                             help='input batch size for training (default: 1024)')
