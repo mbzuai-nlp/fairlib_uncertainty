@@ -7,6 +7,7 @@ from tqdm import tqdm
 class BERT_encoder:
     def __init__(self, batch_size=128, model_name='bert-base-cased') -> None:
         self.batch_size = batch_size
+        self.model_name = model_name
         self.model, self.tokenizer = self.load_lm(model_name=model_name)
 
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -28,7 +29,10 @@ class BERT_encoder:
         n_iterations = (total_n // self.batch_size) + (total_n % self.batch_size > 0)
         for i in tqdm(range(n_iterations)):
             row_lists = list(data)[i*self.batch_size:(i+1)*self.batch_size]
-            tokens = self.tokenizer(row_lists, add_special_tokens=True, padding=True, truncation=True, return_tensors="pt")
+            if "clinicalbert" in self.model_name.lower():
+                tokens = self.tokenizer(row_lists, max_length=512, add_special_tokens=True, padding=True, truncation=True, return_tensors="pt")
+            else:
+                tokens = self.tokenizer(row_lists, add_special_tokens=True, padding=True, truncation=True, return_tensors="pt")
             input_ids = tokens['input_ids']
             masks = tokens['attention_mask']
             attention_mask.append(masks)
