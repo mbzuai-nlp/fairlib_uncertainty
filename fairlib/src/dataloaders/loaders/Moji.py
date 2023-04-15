@@ -29,7 +29,7 @@ class DeepMojiDataset(BaseDataset):
         n_2 = int(self.n * (1-self.p_aae) * (1-self.ratio)) # happy SAE
         n_3 = int(self.n * self.p_aae * (1-self.ratio)) # unhappy AAE
         n_4 = int(self.n * (1-self.p_aae) * self.ratio) # unhappy SAE
-        if self.args.unbalance_test:
+        if self.args.unbalance_test and self.split != "train":
             # recalc n_i by real test and val sizes
             # mimic train distribution
             n_1 = n_4 = 2000
