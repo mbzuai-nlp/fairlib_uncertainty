@@ -18,7 +18,7 @@ class DeepMojiDataset(BaseDataset):
 
     def load_data(self):
         # stereotyping, 0.5 is balanced 
-        if self.split == "train" and self.args.dataset.split("_")[-1] != "balanced":
+        if self.split == "train" and self.args.dataset.split("_")[-1] != "balanced" or self.args.unbalance_test:
             self.ratio = 0.8 
         else:
             self.ratio = 0.5 # stereotyping, 0.5 is balanced 

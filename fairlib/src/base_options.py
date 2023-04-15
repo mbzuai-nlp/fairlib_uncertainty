@@ -197,6 +197,12 @@ class BaseOptions(object):
                             help='results directory')
         parser.add_argument('--model_dir', type=str, default='models',
                             help='directory storing trained models')
+        parser.add_argument('--balance_test', action='store_true',
+                            help='if set, will balance test and val set for bios')
+        parser.add_argument('--unbalance_test', action='store_true',
+                            help='if set, will unbalance test and val set for moji')
+        parser.add_argument('--subsample_all', type=float, default=1.0,
+                            help='subsample percent for all splits')
         parser.add_argument('--device_id', type=comp(int, 'ge', -1), default=0, help='device id, -1 is cpu')
         parser.add_argument('--num_workers', type=nonneg_int, default=0,
                             help='number of data loader workers')
@@ -544,19 +550,19 @@ class BaseOptions(object):
             # Init the dataloaders
             if state.data_dir is None:
                 state.data_dir = dataloaders.default_dataset_roots[state.dataset]
-            try:
-                train_iterator, dev_iterator, test_iterator = dataloaders.get_dataloaders(state)
+            #try:
+            train_iterator, dev_iterator, test_iterator = dataloaders.get_dataloaders(state)
 
-                state.opt.train_generator = train_iterator
-                state.opt.dev_generator = dev_iterator
-                state.opt.test_generator = test_iterator
+            state.opt.train_generator = train_iterator
+            state.opt.dev_generator = dev_iterator
+            state.opt.test_generator = test_iterator
 
-                if not silence:
-                    logging.info('train dataset size:\t{}'.format(len(train_iterator.dataset)))
-                    logging.info('validation dataset size: \t{}'.format(len(dev_iterator.dataset)))
-                    logging.info('test dataset size: \t{}'.format(len(test_iterator.dataset)))
-                    logging.info('datasets built!')
-
+            if not silence:
+                logging.info('train dataset size:\t{}'.format(len(train_iterator.dataset)))
+                logging.info('validation dataset size: \t{}'.format(len(dev_iterator.dataset)))
+                logging.info('test dataset size: \t{}'.format(len(test_iterator.dataset)))
+                logging.info('datasets built!')
+            '''
             except Exception as e:
                 # Get current system exception
                 ex_type, ex_value, ex_traceback = sys.exc_info()
@@ -572,7 +578,7 @@ class BaseOptions(object):
                 logging.info("Stack trace : %s" %stack_trace)
                 
                 logging.info('dataloaders need to be initialized!')
-            
+            '''
             # Init discriminator for adversarial training
             if state.adv_debiasing:
 
