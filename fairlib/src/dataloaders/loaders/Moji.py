@@ -18,7 +18,7 @@ class DeepMojiDataset(BaseDataset):
 
     def load_data(self):
         # stereotyping, 0.5 is balanced 
-        if self.split == "train" and self.args.dataset.split("_")[-1] != "balanced" or self.args.unbalance_test:
+        if (self.split == "train" and self.args.dataset.split("_")[-1] != "balanced") or self.args.unbalance_test:
             self.ratio = 0.8 
         else:
             self.ratio = 0.5 # stereotyping, 0.5 is balanced 
@@ -29,6 +29,11 @@ class DeepMojiDataset(BaseDataset):
         n_2 = int(self.n * (1-self.p_aae) * (1-self.ratio)) # happy SAE
         n_3 = int(self.n * self.p_aae * (1-self.ratio)) # unhappy AAE
         n_4 = int(self.n * (1-self.p_aae) * self.ratio) # unhappy SAE
+        if self.args.unbalance_test:
+            # recalc n_i by real test and val sizes
+            # mimic train distribution
+            n_1 = n_4 = 2000
+            n_2 = n_3 = int((1 - self.ratio) / self.ratio * n_1)
 
         if self.args.encoder_architecture == "BERT" and self.args.use_collator:
             #some test with data collator
