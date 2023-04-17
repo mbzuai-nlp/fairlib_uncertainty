@@ -550,19 +550,18 @@ class BaseOptions(object):
             # Init the dataloaders
             if state.data_dir is None:
                 state.data_dir = dataloaders.default_dataset_roots[state.dataset]
-            #try:
-            train_iterator, dev_iterator, test_iterator = dataloaders.get_dataloaders(state)
+            try:
+                train_iterator, dev_iterator, test_iterator = dataloaders.get_dataloaders(state)
 
-            state.opt.train_generator = train_iterator
-            state.opt.dev_generator = dev_iterator
-            state.opt.test_generator = test_iterator
+                state.opt.train_generator = train_iterator
+                state.opt.dev_generator = dev_iterator
+                state.opt.test_generator = test_iterator
 
-            if not silence:
-                logging.info('train dataset size:\t{}'.format(len(train_iterator.dataset)))
-                logging.info('validation dataset size: \t{}'.format(len(dev_iterator.dataset)))
-                logging.info('test dataset size: \t{}'.format(len(test_iterator.dataset)))
-                logging.info('datasets built!')
-            '''
+                if not silence:
+                    logging.info('train dataset size:\t{}'.format(len(train_iterator.dataset)))
+                    logging.info('validation dataset size: \t{}'.format(len(dev_iterator.dataset)))
+                    logging.info('test dataset size: \t{}'.format(len(test_iterator.dataset)))
+                    logging.info('datasets built!')
             except Exception as e:
                 # Get current system exception
                 ex_type, ex_value, ex_traceback = sys.exc_info()
@@ -578,7 +577,6 @@ class BaseOptions(object):
                 logging.info("Stack trace : %s" %stack_trace)
                 
                 logging.info('dataloaders need to be initialized!')
-            '''
             # Init discriminator for adversarial training
             if state.adv_debiasing:
 
