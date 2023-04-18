@@ -226,6 +226,8 @@ class BaseOptions(object):
                             help='0 - utf8, 1 - utf8 + deemojify, 2 - latin-1')
         parser.add_argument('--use_collator', action='store_true', default=False,
                             help='Add padding dynamically or not')
+        parser.add_argument('--performance_metric', type=str, default='accuracy',
+                            help='Performance metric for DTO, accuracy|f1_score')
         # here we use an array instead of single value, so we could easily add more criteria in future
         parser.add_argument('--early_stopping_weights', type=float, nargs="+", default=[1.0,1.0],
                             help='Weights for balanced_dto early stopping criterion - for perf and fairness')
