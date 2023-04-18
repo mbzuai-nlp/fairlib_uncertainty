@@ -197,6 +197,12 @@ class BaseOptions(object):
                             help='results directory')
         parser.add_argument('--model_dir', type=str, default='models',
                             help='directory storing trained models')
+        parser.add_argument('--balance_test', action='store_true',
+                            help='if set, will balance test and val set for bios')
+        parser.add_argument('--unbalance_test', action='store_true',
+                            help='if set, will unbalance test and val set for moji')
+        parser.add_argument('--subsample_all', type=float, default=1.0,
+                            help='subsample percent for all splits')
         parser.add_argument('--device_id', type=comp(int, 'ge', -1), default=0, help='device id, -1 is cpu')
         parser.add_argument('--num_workers', type=nonneg_int, default=0,
                             help='number of data loader workers')
@@ -228,6 +234,8 @@ class BaseOptions(object):
                             help='Add padding dynamically or not')
         parser.add_argument('--performance_metric', type=str, default='accuracy',
                             help='Performance metric for DTO, accuracy|f1_score')
+        parser.add_argument('--protected_task', type=str, default="ethnicity",
+                            help='Protected task (for sepsis)')
         # here we use an array instead of single value, so we could easily add more criteria in future
         parser.add_argument('--early_stopping_weights', type=float, nargs="+", default=[1.0,1.0],
                             help='Weights for balanced_dto early stopping criterion - for perf and fairness')
@@ -571,7 +579,6 @@ class BaseOptions(object):
                 logging.info("Stack trace : %s" %stack_trace)
                 
                 logging.info('dataloaders need to be initialized!')
-            
             # Init discriminator for adversarial training
             if state.adv_debiasing:
 

@@ -29,7 +29,6 @@ class Bios:
         self.encoder = BERT_encoder(self.batch_size, self.model_name)
 
     def download_files(self):
-        return
         for split in self._SPLITS:
             download(
                 url = "https://storage.googleapis.com/ai2i/nullspace/biasbios/{}.pickle".format(split), 
