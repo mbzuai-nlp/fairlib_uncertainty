@@ -16,6 +16,14 @@ class BiosDataset(BaseDataset):
         self.filename = "bios_{}_df.pkl".format(self.split)
 
         data = pd.read_pickle(Path(self.args.data_dir) / self.filename)
+        if self.args.subsample_classes is not None:
+            # use only selected columns from target class
+            data = data[data["p"].isin(self.args.subsample_classes)]
+            # after reindex target labels
+            data = data.reset_index(drop=True)
+            old_targets = data["profession_class"].unique()
+            map_new_targets = {key: value for key, value in zip(old_targets, range(len(old_targets)))}
+            data["profession_class"].replace(map_new_targets, inplace=True)
 
         if self.args.protected_task in ["economy", "both"] and self.args.full_label:
             selected_rows = (data["economy_label"] != "Unknown")
@@ -23,6 +31,7 @@ class BiosDataset(BaseDataset):
 
         if self.args.encoder_architecture == "Fixed":
             self.X = list(data[self.embedding_type])
+            self.token_type_ids, self.mask = None, None
         elif self.args.encoder_architecture == "BERT":
             self.X, self.token_type_ids, self.mask = self.args.text_encoder.encoder(list(data[self.text_type]))
         else:
