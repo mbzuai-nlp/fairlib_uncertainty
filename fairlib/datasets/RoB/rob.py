@@ -76,6 +76,6 @@ class RoB:
                 split_df.to_pickle(Path(self.dest_folder) / "rob_{}_df.pkl".format(split))
             else:
                 split_df.to_pickle(Path(self.dest_folder) / "rob_area_{}_df.pkl".format(split))
-
+                
     def prepare_data(self):
         self.bert_encoding()

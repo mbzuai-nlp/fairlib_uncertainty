@@ -67,3 +67,35 @@ class RoBDataset(BaseDataset):
             self.protected_label = data["gender_class"].astype(np.int32) # Gender
         elif self.args.protected_task == "area":
             self.protected_label = data["area_class"].astype(np.int32) # Gender
+            
+        if self.args.balance_test and self.split in ["test", "dev"]:  
+            classes = np.unique(self.y)
+            attrs = np.unique(self.protected_label)
+            # rebalance test set
+            overall_mask_bios = np.array([False] * len(self.y))
+            for class_val in classes:
+                class_ids = np.where(self.y == class_val, True, False)
+                class_ids = np.arange(len(self.y))[class_ids]
+                # find prot_attr distribution
+                vals, distr = np.unique(self.protected_label[class_ids], return_counts=True)
+                min_val, min_attr = np.min(distr), np.argmin(distr)
+                min_val = max(min_val, 20)
+                min_ids = class_ids[np.where(self.protected_label[class_ids] == min_attr)[0]]
+                np.put(overall_mask_bios, min_ids, True)
+                for attr in attrs:
+                    if attr == min_attr:
+                        continue
+                    idx = self.protected_label[class_ids] == attr
+                    if min_val < idx.sum(): 
+                        max_ids = class_ids[np.where(idx)[0][:min_val]]
+                    else:
+                        max_ids = class_ids[np.where(idx)[0]]
+                    np.put(overall_mask_bios, max_ids, True)
+            test_mask_ids = np.arange(len(overall_mask_bios))[overall_mask_bios]
+            self.X = list(np.asarray(self.X)[test_mask_ids])
+            self.y = self.y[test_mask_ids]
+            self.protected_label = self.protected_label[test_mask_ids]
+            if self.mask is not None:
+                self.mask = list(np.asarray(self.mask)[test_mask_ids])
+            if self.token_type_ids is not None:
+                self.token_type_ids = list(np.asarray(self.token_type_ids)[test_mask_ids])
