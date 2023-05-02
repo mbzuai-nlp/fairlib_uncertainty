@@ -22,6 +22,7 @@ class BiosDataset(BaseDataset):
             # after reindex target labels
             data = data.reset_index(drop=True)
             old_targets = data["profession_class"].unique()
+            old_targets.sort()
             map_new_targets = {key: value for key, value in zip(old_targets, range(len(old_targets)))}
             data["profession_class"].replace(map_new_targets, inplace=True)
 
