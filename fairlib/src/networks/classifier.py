@@ -9,7 +9,7 @@ import numpy as np
 from .utils import BaseModel
 from .augmentation_layer import Augmentation_layer
 
-from transformers import BertModel
+from transformers import BertModel, AutoModel
 
 class MLP(BaseModel):
     def __init__(self, args):
@@ -162,7 +162,10 @@ class BERTClassifier(BaseModel):
         self.n_freezed_layers = self.args.n_freezed_layers
 
         self.model_name = args.model_name
-        self.bert = BertModel.from_pretrained(self.model_name)
+        if "bert-base" in self.model_name:
+            self.bert = BertModel.from_pretrained(self.model_name)
+        else:
+            self.bert = AutoModel.from_pretrained(self.model_name)
 
         self.bert_layers = [self.bert.embeddings, 
                                 self.bert.encoder.layer[0],

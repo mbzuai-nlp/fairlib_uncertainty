@@ -238,6 +238,8 @@ class BaseOptions(object):
                             help='Performance metric for DTO, accuracy|f1_score')
         parser.add_argument('--protected_task', type=str, default="ethnicity",
                             help='Protected task (for sepsis)')
+        parser.add_argument('--subsample_classes', nargs="*", type=str, default=None,
+                            help='Set of classes in subampled dataset (for Bios)')
         # here we use an array instead of single value, so we could easily add more criteria in future
         parser.add_argument('--early_stopping_weights', type=float, nargs="+", default=[1.0,1.0],
                             help='Weights for balanced_dto early stopping criterion - for perf and fairness')
