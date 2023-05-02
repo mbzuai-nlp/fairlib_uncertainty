@@ -36,15 +36,24 @@ class SepsisDataset(BaseDataset):
         if self.args.protected_task == "sex":
             self.protected_label = data["gender_class"].astype(np.int32) # Gender
         elif self.args.protected_task == "ethnicity":
-            self.protected_label = data["ethnicity_class"].astype(np.int32) # Gender
+            self.protected_label = data["ethnicity_class"].astype(np.int32) # Ethnicity
             
-        if self.args.balance_test and self.split in ["test", "dev"]:  
-            classes = np.unique(self.y)
+            
+        if self.args.subsample_protected_labels:
+            dev_data = pd.read_pickle(Path(self.args.data_dir) / self.filename.replace(self.split, "dev"))
+            dev_y = dev_data["label"].astype(np.float64)
+            if self.args.protected_task == "sex":
+                dev_protected_label = dev_data["gender_class"].astype(np.int32) # Gender
+            elif self.args.protected_task == "ethnicity":
+                dev_protected_label = dev_data["ethnicity_class"].astype(np.int32) # Ethnicity
+            
+            classes = np.unique(dev_y)
             large_attrs_cls = []
             for c in classes:
-                value_counts = self.protected_label[self.y == c].value_counts() 
+                value_counts = dev_protected_label[dev_y == c].value_counts() 
                 large_attrs_cls.append(value_counts[value_counts > 20].index)
             large_attrs = reduce(np.intersect1d, large_attrs_cls)
+            
             ids = np.isin(self.protected_label, large_attrs)
             
             self.X = list(np.asarray(self.X)[ids])
@@ -55,6 +64,8 @@ class SepsisDataset(BaseDataset):
             if self.token_type_ids is not None:
                 self.token_type_ids = list(np.asarray(self.token_type_ids)[ids])
             
+        if self.args.balance_test and self.split in ["test", "dev"]:  
+            classes = np.unique(self.y)
             attrs = np.unique(self.protected_label)
             # rebalance test set
             overall_mask_bios = np.array([False] * len(self.y))

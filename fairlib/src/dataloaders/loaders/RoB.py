@@ -69,13 +69,22 @@ class RoBDataset(BaseDataset):
         elif self.args.protected_task == "area":
             self.protected_label = data["area_class"].astype(np.int32) # Gender
             
-        if self.args.balance_test and self.split in ["test", "dev"]:  
-            classes = np.unique(self.y)
+            
+        if self.args.subsample_protected_labels:
+            dev_data = pd.read_pickle(Path(self.args.data_dir) / self.filename.replace(self.split, "dev"))
+            dev_y = dev_data["y"].astype(np.float64)
+            if self.args.protected_task == "gender":
+                dev_protected_label = dev_data["gender_class"].astype(np.int32) # Gender
+            elif self.args.protected_task == "area":
+                dev_protected_label = dev_data["area_class"].astype(np.int32) # Area
+            
+            classes = np.unique(dev_y)
             large_attrs_cls = []
             for c in classes:
-                value_counts = self.protected_label[self.y == c].value_counts() 
+                value_counts = dev_protected_label[dev_y == c].value_counts() 
                 large_attrs_cls.append(value_counts[value_counts > 20].index)
             large_attrs = reduce(np.intersect1d, large_attrs_cls)
+            
             ids = np.isin(self.protected_label, large_attrs)
             
             self.X = list(np.asarray(self.X)[ids])
@@ -86,6 +95,8 @@ class RoBDataset(BaseDataset):
             if self.token_type_ids is not None:
                 self.token_type_ids = list(np.asarray(self.token_type_ids)[ids])
             
+        if self.args.balance_test and self.split in ["test", "dev"]:  
+            classes = np.unique(self.y)
             attrs = np.unique(self.protected_label)
             # rebalance test set
             overall_mask_bios = np.array([False] * len(self.y))

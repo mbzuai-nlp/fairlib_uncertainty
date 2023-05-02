@@ -201,6 +201,8 @@ class BaseOptions(object):
                             help='if set, will balance test and val set for bios')
         parser.add_argument('--unbalance_test', action='store_true',
                             help='if set, will unbalance test and val set for moji')
+        parser.add_argument('--subsample_protected_labels', action='store_true',
+                            help='if set, will subsample protected labels by dev set for other sets')
         parser.add_argument('--subsample_all', type=float, default=1.0,
                             help='subsample percent for all splits')
         parser.add_argument('--device_id', type=comp(int, 'ge', -1), default=0, help='device id, -1 is cpu')
