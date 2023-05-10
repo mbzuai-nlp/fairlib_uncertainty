@@ -120,6 +120,60 @@ def multiclass_metric_loss_fast(represent, target, margin=10, class_num=2, start
     return loss_intra, loss_inter
 
 
+def multiclass_metric_loss_fast_optimized(represent, target, margin=10, class_num=2, start_idx=1, per_class_norm=False):
+    target_list = target.data.tolist()
+    dim = represent.data.shape[1]
+    
+    indices = []
+    for class_idx in range(1, class_num + 1):
+        indice_i = [i for i, x in enumerate(target_list) if x == class_idx]
+        indices.append(indice_i)
+    loss_intra = torch.FloatTensor([0]).to(represent.device)
+    num_intra = 0
+    loss_inter = torch.FloatTensor([0]).to(represent.device)
+    num_inter = 0
+
+    cls_repr = {}
+    for i in range(class_num):
+        indices_i = indices[i]
+        curr_repr = represent[indices_i]
+        if len(curr_repr) > 0:
+            cls_repr[i] = curr_repr
+            s_k = len(indices_i)
+            triangle_matrix = torch.triu(
+                (curr_repr.unsqueeze(1) - curr_repr).norm(2, dim=-1)
+            )
+            if per_class_norm:
+                loss_intra += torch.sum(1 / dim * (triangle_matrix ** 2)) / np.max([(s_k ** 2 - s_k), 1]) * 2
+            else:
+                loss_intra += torch.sum(1 / dim * (triangle_matrix ** 2))
+                num_intra += (curr_repr.shape[0] ** 2 - curr_repr.shape[0]) / 2
+
+    batch_labels = list(cls_repr.keys())
+    bs = represent.shape[0]
+    for n, j in enumerate(batch_labels):
+        curr_repr = cls_repr[j]
+        s_k = len(indices[j])
+        matrices = torch.zeros(len(batch_labels), bs)
+        inter_buf_loss = 0
+        for l, k in enumerate(batch_labels[n+1:]):
+            s_q = len(indices[k])
+            matrix = (curr_repr.unsqueeze(1) - cls_repr[k]).norm(2, dim=-1).flatten()
+            if per_class_norm:
+                loss_inter += torch.sum(torch.clamp(margin - 1 / dim * (matrix ** 2), min=0)) / np.max([(s_k * s_q), 1])
+            else:
+                loss_inter += torch.sum(torch.clamp(margin - 1 / dim * (matrix ** 2), min=0))
+                num_inter += cls_repr[k].shape[0] * curr_repr.shape[0]
+        
+    if num_intra > 0 and not(per_class_norm):
+        loss_intra = loss_intra / num_intra
+    if num_inter > 0 and not(per_class_norm):
+        loss_inter = loss_inter / num_inter
+        
+    return loss_intra, loss_inter
+
+
+
 def compute_loss_cer(logits, labels, loss, lamb, unpad=False):
     """Computes regularization term for loss with CER
     """
@@ -153,7 +207,7 @@ def compute_loss_metric(hiddens, labels, loss, num_labels,
     start_idx = 0 if class_num == 2 else 1
     # TODO: define represent, target and margin
     # Get only sentence representaions
-    loss_intra, loss_inter = multiclass_metric_loss_fast(
+    loss_intra, loss_inter = multiclass_metric_loss_fast_optimized(
         hiddens,
         labels,
         margin=margin,

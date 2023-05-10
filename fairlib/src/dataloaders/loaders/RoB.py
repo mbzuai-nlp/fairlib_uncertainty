@@ -82,11 +82,11 @@ class RoBDataset(BaseDataset):
             large_attrs_cls = []
             for c in classes:
                 value_counts = dev_protected_label[dev_y == c].value_counts() 
-                large_attrs_cls.append(value_counts[value_counts > 20].index)
+                large_attrs_cls.append(value_counts[value_counts > self.args.subsample_min_size].index)
             large_attrs = reduce(np.intersect1d, large_attrs_cls)
             
             ids = np.isin(self.protected_label, large_attrs)
-            
+
             self.X = list(np.asarray(self.X)[ids])
             self.y = self.y[ids].reset_index(drop=True)
             self.protected_label = self.protected_label[ids].reset_index(drop=True)
@@ -94,6 +94,9 @@ class RoBDataset(BaseDataset):
                 self.mask = list(np.asarray(self.mask)[ids])
             if self.token_type_ids is not None:
                 self.token_type_ids = list(np.asarray(self.token_type_ids)[ids])
+            
+            attr_map = {x:i for i, x in enumerate(np.unique(self.protected_label))} 
+            self.protected_label = self.protected_label.map(attr_map)
             
         if self.args.balance_test and self.split in ["test", "dev"]:  
             classes = np.unique(self.y)
