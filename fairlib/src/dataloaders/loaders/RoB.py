@@ -51,13 +51,21 @@ class RoBDataset(BaseDataset):
     text_type = "x"
 
     def load_data(self):
-        self.filename = "rob_{}_df.pkl".format(self.split)
+        if "biobert" in self.args.model_name:
+            self.short_model_name = "biobert_"
+        elif "scibert" in self.args.model_name:
+            self.short_model_name = "scibert_"
+        else:
+            self.short_model_name = ""
+            
+        self.filename = "{}rob_{}_df.pkl".format(self.short_model_name, self.split)
         if self.args.protected_task == "area":
-            self.filename = "rob_area_{}_df.pkl".format(self.split)
+            self.filename = "{}rob_area_{}_df.pkl".format(self.short_model_name, self.split)
         data = pd.read_pickle(Path(self.args.data_dir) / self.filename)
 
         if self.args.encoder_architecture == "Fixed":
             self.X = list(data[self.embedding_type])
+            self.token_type_ids, self.mask = None, None
         elif self.args.encoder_architecture == "BERT":
             self.X, self.token_type_ids, self.mask = self.args.text_encoder.encoder(list(data[self.text_type]))
         else:
@@ -68,8 +76,7 @@ class RoBDataset(BaseDataset):
             self.protected_label = data["gender_class"].astype(np.int32) # Gender
         elif self.args.protected_task == "area":
             self.protected_label = data["area_class"].astype(np.int32) # Gender
-            
-            
+  
         if self.args.subsample_protected_labels:
             dev_data = pd.read_pickle(Path(self.args.data_dir) / self.filename.replace(self.split, "dev"))
             dev_y = dev_data["y"].astype(np.float64)

@@ -29,7 +29,7 @@ class BERT_encoder:
         n_iterations = (total_n // self.batch_size) + (total_n % self.batch_size > 0)
         for i in tqdm(range(n_iterations)):
             row_lists = list(data)[i*self.batch_size:(i+1)*self.batch_size]
-            if "clinicalbert" in self.model_name.lower():
+            if ("clinicalbert" in self.model_name.lower()) or ("biobert" in self.model_name.lower()) or ("scibert" in self.model_name.lower()):
                 tokens = self.tokenizer(row_lists, max_length=512, add_special_tokens=True, padding=True, truncation=True, return_tensors="pt")
             else:
                 tokens = self.tokenizer(row_lists, add_special_tokens=True, padding=True, truncation=True, return_tensors="pt")
