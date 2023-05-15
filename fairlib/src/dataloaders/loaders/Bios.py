@@ -45,7 +45,8 @@ class BiosDataset(BaseDataset):
             self.protected_label = data["economy_class"].astype(np.int32) # Economy
         else:
             self.protected_label = data["intersection_class"].astype(np.int32) # Intersection
-        if self.args.subsample_all < 1.0:
+        full_splits = self.args.full_splits if isinstance(self.args.full_splits, list) else [self.args.full_splits]
+        if self.args.subsample_all < 1.0 and self.split not in full_splits:
             # subsample split
             subsample_len = int(len(self.y) * self.args.subsample_all)
             self.X = self.X[:subsample_len]
