@@ -1,7 +1,7 @@
 from .debias import get_debiasing_projection, get_projection_to_intersection_of_nullspaces
 
 from sklearn.svm import LinearSVC
-from sklearn.linear_model import LogisticRegression
+from sklearn.linear_model import LogisticRegression, SGDClassifier
 from sklearn.linear_model import LinearRegression
 
 from collections import Counter, defaultdict
@@ -33,7 +33,7 @@ def get_INLP_trade_offs(model, args):
     is_autoregressive = True
     dim = args.hidden_size
     clf = LogisticRegression
-    clf_params = {'fit_intercept': True, 'class_weight': discriminator_reweighting, 'dual': False, 'C': 0.1, "max_iter": 100}
+    clf_params = {'fit_intercept': True, 'class_weight': discriminator_reweighting, 'dual': False, 'C': 0.1, "max_iter": 1000}
 
     # Load best checkpoints
     model = load_trained_model(model, args.model_dir, args.device)

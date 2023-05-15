@@ -9,8 +9,7 @@ from ..evaluators.evaluator import gap_eval_scores
 from ..networks.ue_regularizers import compute_loss_cer, RAU_loss, compute_loss_metric
 import pandas as pd
 import numpy as np
-from sklearn.metrics import accuracy_score
-
+from sklearn.metrics import accuracy_score, f1_score
 
 def get_hiddens(args, model, batch, text, mask, p_tags):
     if args.gated:
@@ -388,10 +387,11 @@ class BaseModel(nn.Module):
                 protected_attribute=valid_private_labels,
                 args = self.args,
             )
-            valid_accs.append(valid_scores["accuracy"])
+            
+            valid_accs.append(valid_scores[self.args.performance_metric])
             valid_fairs.append((1 - valid_scores["TPR_GAP"]))
             # calc vanilla dto, without any reweighting
-            epoch_valid_dto = np.sqrt((1 - valid_scores["accuracy"]) ** 2 + (valid_scores["TPR_GAP"]) ** 2)
+            epoch_valid_dto = np.sqrt((1 - valid_scores[self.args.performance_metric]) ** 2 + (valid_scores["TPR_GAP"]) ** 2)
             # epoch_valid_dto = 0.0
             # Check if there was an improvement
             if self.args.early_stopping_criterion == "dto":
@@ -439,7 +439,7 @@ class BaseModel(nn.Module):
                 logging.info("Epochs since last improvement: %d" % (epochs_since_improvement,))
             else:
                 epochs_since_improvement = 0
-            logging.info("Loss, accuracy and DTO: %f %f %f" % (epoch_valid_loss, epoch_valid_acc, epoch_valid_dto))
+            logging.info("Loss, accuracy, f1_score and DTO: %f %f %f %f" % (epoch_valid_loss, epoch_valid_acc, valid_scores["macro_fscore"], epoch_valid_dto))
 
             if epoch % self.args.checkpoint_interval == 0:
                 logging.info("Evaluation at Epoch %d" % (epoch,))

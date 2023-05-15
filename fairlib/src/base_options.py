@@ -201,6 +201,10 @@ class BaseOptions(object):
                             help='if set, will balance test and val set for bios')
         parser.add_argument('--unbalance_test', action='store_true',
                             help='if set, will unbalance test and val set for moji')
+        parser.add_argument('--subsample_protected_labels', action='store_true',
+                            help='if set, will subsample protected labels by dev set for other sets')
+        parser.add_argument('--subsample_min_size', type=int, default=20,
+                            help='min size for subsample protected labels by dev set for other sets')
         parser.add_argument('--subsample_all', type=float, default=1.0,
                             help='subsample percent for all splits')
         parser.add_argument('--device_id', type=comp(int, 'ge', -1), default=0, help='device id, -1 is cpu')
@@ -232,6 +236,8 @@ class BaseOptions(object):
                             help='0 - utf8, 1 - utf8 + deemojify, 2 - latin-1')
         parser.add_argument('--use_collator', action='store_true', default=False,
                             help='Add padding dynamically or not')
+        parser.add_argument('--performance_metric', type=str, default='accuracy',
+                            help='Performance metric for DTO, accuracy|f1_score')
         parser.add_argument('--protected_task', type=str, default="ethnicity",
                             help='Protected task (for sepsis)')
         parser.add_argument('--subsample_classes', nargs="*", type=str, default=None,

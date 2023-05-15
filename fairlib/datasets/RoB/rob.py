@@ -53,10 +53,17 @@ class RoB:
     _NAME = "RoB"
     _SPLITS = ["train", "dev", "test"]
 
-    def __init__(self, dest_folder, batch_size):
+    def __init__(self, dest_folder, batch_size, model_name='dmis-lab/biobert-base-cased-v1.2'):
         self.dest_folder = dest_folder
         self.batch_size = batch_size
-        self.encoder = BERT_encoder(self.batch_size)
+        self.model_name = model_name
+        if "biobert" in model_name:
+            self.short_model_name = "biobert_"
+        elif "scibert" in model_name:
+            self.short_model_name = "scibert_"
+        else:
+            self.short_model_name = ""
+        self.encoder = BERT_encoder(self.batch_size, self.model_name)
 
     def bert_encoding(self):
         for split in self._SPLITS:
@@ -73,9 +80,9 @@ class RoB:
             split_df["label"] = split_df["y"]
 
             if "gender" in self.dest_folder:
-                split_df.to_pickle(Path(self.dest_folder) / "rob_{}_df.pkl".format(split))
+                split_df.to_pickle(Path(self.dest_folder) / "{}rob_{}_df.pkl".format(self.short_model_name, split))
             else:
-                split_df.to_pickle(Path(self.dest_folder) / "rob_area_{}_df.pkl".format(split))
-
+                split_df.to_pickle(Path(self.dest_folder) / "{}rob_area_{}_df.pkl".format(self.short_model_name, split))
+                
     def prepare_data(self):
         self.bert_encoding()
