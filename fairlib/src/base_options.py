@@ -220,6 +220,8 @@ class BaseOptions(object):
                             help='Criterion for early stopping - loss|dto|balanced_dto|max_balanced_dto')
         parser.add_argument('--group_agg_power', type=int, default=None,
                             help='Function for aggregation GAPs - 1|2|None')
+        parser.add_argument('--gap_metrics', nargs='+', default=['TPR', 'FPR', 'PPR'],
+                            help='Metrics for calculation GAPs, the first is used for fairness')
         parser.add_argument('--n_freezed_layers', type=int, default=0,
                             help='Number of freezed layer in BERT model')
         parser.add_argument('--cross_val', type=bool, default=False,

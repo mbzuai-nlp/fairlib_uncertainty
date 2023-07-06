@@ -386,12 +386,14 @@ class BaseModel(nn.Module):
                 y_true=valid_labels, 
                 protected_attribute=valid_private_labels,
                 args = self.args,
+                metrics = self.args.gap_metrics,
             )
+            GAP_metric = f"{self.args.gap_metrics[0]}_GAP"
             
             valid_accs.append(valid_scores[self.args.performance_metric])
-            valid_fairs.append((1 - valid_scores["TPR_GAP"]))
+            valid_fairs.append((1 - valid_scores[GAP_metric]))
             # calc vanilla dto, without any reweighting
-            epoch_valid_dto = np.sqrt((1 - valid_scores[self.args.performance_metric]) ** 2 + (valid_scores["TPR_GAP"]) ** 2)
+            epoch_valid_dto = np.sqrt((1 - valid_scores[self.args.performance_metric]) ** 2 + (valid_scores[GAP_metric]) ** 2)
             # epoch_valid_dto = 0.0
             # Check if there was an improvement
             if self.args.early_stopping_criterion == "dto":
