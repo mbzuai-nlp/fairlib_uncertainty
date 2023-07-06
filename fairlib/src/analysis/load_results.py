@@ -54,8 +54,12 @@ def model_selection_parallel(
 
     if return_all:
         for exp in tqdm(exps):
-            _exp_results = retrive_all_exp_results(exp,GAP_metric_name, Performance_metric_name,index_column_names, keep_original_metrics)
-            exp_results.append(_exp_results)
+            try:
+                _exp_results = retrive_all_exp_results(exp,GAP_metric_name, Performance_metric_name,index_column_names, keep_original_metrics)
+                exp_results.append(_exp_results)
+            except Exception as e:
+                print(f'Error {e} with {exp}')
+                continue
 
         result_df = pd.concat(exp_results)
         result_df["index_epoch"] = result_df["epoch"].copy()
