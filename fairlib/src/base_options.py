@@ -207,6 +207,10 @@ class BaseOptions(object):
                             help='min size for subsample protected labels by dev set for other sets')
         parser.add_argument('--subsample_all', type=float, default=1.0,
                             help='subsample percent for all splits')
+        parser.add_argument('--rebalance_power', type=int, default=1,
+                            help='power for the rebalancing prot attr ratios on train set')
+        parser.add_argument('--rebalance_all', action='store_true',
+                            help='If set, rebalances to the power all splits')
         parser.add_argument('--device_id', type=comp(int, 'ge', -1), default=0, help='device id, -1 is cpu')
         parser.add_argument('--num_workers', type=nonneg_int, default=0,
                             help='number of data loader workers')

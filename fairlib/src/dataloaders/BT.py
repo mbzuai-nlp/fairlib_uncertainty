@@ -118,7 +118,7 @@ def get_sampled_indices(BTObj, y, protected_label, method = "Downsampling"):
             if method == "Downsampling":
                 selected = min([len(group_idx.get((y, _g))) for _g in distinct_g_label])
             elif method == "Resampling":
-                selected = sum([len(group_idx.get((y, _g))) for _g in distinct_g_label]) / len(distinct_g_label)
+                selected = sum([len(group_idx.get((y, _g), [])) for _g in distinct_g_label]) / len(distinct_g_label)
 
             for g in distinct_g_label:
                 _index = group_idx.get((y,g), [])

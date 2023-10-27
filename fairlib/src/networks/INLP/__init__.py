@@ -144,7 +144,7 @@ def get_INLP_trade_offs(model, args):
             else:
                 best_valid_dto = np.sqrt((1 - balanced_accs[best_epoch]) ** 2 + (1 - balanced_fairs[best_epoch]) ** 2)
         is_best_bdto = epoch_valid_dto < best_valid_dto
-        best_epoch = iteration if is_best else best_epoch
+        best_epoch = iteration if is_best_bdto else best_epoch
         best_valid_dto = min(epoch_valid_dto, best_valid_dto)
         if is_best_bdto:
             # save both model and classifier

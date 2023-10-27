@@ -56,6 +56,34 @@ class BiosDataset(BaseDataset):
                 self.mask = self.mask[:subsample_len]
             if self.token_type_ids is not None:
                 self.token_type_ids = self.token_type_ids[:subsample_len]
+        # add one more switch for rebalancing bios - enlarge gap betwen prot attr to the power of their ratio
+        # e.g. if self.args.rebalance_power == 2, then change each p.a. such num_pa_1**2 == num_pa_2
+        splits_for_rebalance = ["train", "dev", "test"] if self.args.rebalance_all else ["train"]
+        if self.args.rebalance_power != 1 and self.split in splits_for_rebalance:
+            overall_mask = []
+            # get prot attrs ratio inside each target class
+            for prof in np.unique(self.y):
+                unique_pas = np.unique(self.protected_label)
+                prof_pas = [np.arange(len(self.y))[np.logical_and(self.y == prof, self.protected_label == unique_pa)] for unique_pa in unique_pas]
+                lens = [len(tab) for tab in prof_pas]
+                initial_ratio = np.max(lens) / np.min(lens)
+                pow_ratio = np.power(initial_ratio, self.args.rebalance_power)
+                subsampled_len = max(int(np.max(lens) / pow_ratio), 1)
+                # now randomly choose samples to remove
+                ids_for_subsample = prof_pas[np.argmin(lens)]
+                ids_for_removal = np.random.choice(ids_for_subsample, len(ids_for_subsample) - subsampled_len, replace=False)
+                # print(f"removed {len(ids_for_removal)}", f"ratio before {initial_ratio}", f"ratio after {pow_ratio}")
+                prof_ids = np.concatenate(prof_pas)
+                new_ids = np.setdiff1d(prof_ids, ids_for_removal)
+                overall_mask.append(new_ids)
+            overall_mask = np.concatenate(overall_mask)
+            self.X = list(np.asarray(self.X)[overall_mask])
+            self.y = self.y[overall_mask]
+            self.protected_label = self.protected_label[overall_mask]
+            if self.mask is not None:
+                self.mask = list(np.asarray(self.mask)[overall_mask])
+            if self.token_type_ids is not None:
+                self.token_type_ids = list(np.asarray(self.token_type_ids)[overall_mask])
         if self.args.balance_test and self.split in ["test", "dev"]:
             classes = np.unique(self.y)
             # rebalance test set

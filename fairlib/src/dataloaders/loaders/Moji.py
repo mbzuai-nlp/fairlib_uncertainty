@@ -95,6 +95,7 @@ class DeepMojiDataset(BaseDataset):
                 self.mask += buf_mask[:class_n]
                 self.y = self.y + [label]*len(buf_x[:class_n])
                 self.protected_label = self.protected_label + [protected]*len(buf_x[:class_n])
+                self.texts = decoded_texts[:class_n]
         else:
             for file, label, protected, class_n in zip(['pos_pos', 'pos_neg', 'neg_pos', 'neg_neg'],
                                                                         [1, 1, 0, 0],
