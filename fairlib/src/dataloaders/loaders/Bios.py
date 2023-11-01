@@ -71,6 +71,7 @@ class BiosDataset(BaseDataset):
                 subsampled_len = max(int(np.max(lens) / pow_ratio), 1)
                 # now randomly choose samples to remove
                 ids_for_subsample = prof_pas[np.argmin(lens)]
+                np.random.seed(42)
                 ids_for_removal = np.random.choice(ids_for_subsample, len(ids_for_subsample) - subsampled_len, replace=False)
                 # print(f"removed {len(ids_for_removal)}", f"ratio before {initial_ratio}", f"ratio after {pow_ratio}")
                 prof_ids = np.concatenate(prof_pas)
