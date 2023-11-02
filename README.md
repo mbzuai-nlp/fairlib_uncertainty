@@ -14,4 +14,16 @@ All of the scripts can be found in the scripts directory. This directory contain
 
 ## Citation
 
-TBA
+```bibtex
+@inproceedings{kuzmin-EtAl:2023:ijcnlp,
+  author    = "Kuzmin, Gleb  and  Vazhentsev, Artem  and  Shelmanov, Artem  and  Han, Xudong  and  Suster, Simon  and  Panov, Maxim  and  Panchenko, Alexander  and  Baldwin, Timothy",
+  title     = "Uncertainty Estimation for Debiased Models: Does Fairness Hurt Reliability?",
+  booktitle      = "Proceedings of the 13th International Joint Conference on Natural Language Processing and the 3rd Conference of the Asia-Pacific Chapter of the Association for Computational Linguistics",
+  month          = "November",
+  year           = "2023",
+  address        = "Nusa Dua, Bali",
+  publisher      = "Association for Computational Linguistics",
+  pages     = "744--770",
+  url       = "https://aclanthology.org/2023.ijcnlp-long.48"
+}
+```
