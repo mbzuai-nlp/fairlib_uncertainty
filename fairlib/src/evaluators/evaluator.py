@@ -116,6 +116,8 @@ def Aggregation_GAP(distinct_groups, all_scores, metric="TPR", group_agg_power =
     # Sum over gaps of all protected groups within each class
     if group_agg_power is None:
         score_gaps = np.sum(abs(score_gaps),axis=1)
+    elif group_agg_power == -1:
+        score_gaps = np.mean(abs(score_gaps),axis=1)
     else:
         score_gaps = power_mean(abs(score_gaps),p=group_agg_power,axis=1)
 

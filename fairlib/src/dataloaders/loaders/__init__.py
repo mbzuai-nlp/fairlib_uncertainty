@@ -13,6 +13,7 @@ from .COMPAS import COMPASDataset
 from .imSitu import imSituDataset
 from .ColoredMNIST import MNISTDataset
 from .Jigsaw import JigsawDataset
+from .Sbic_multi import SbicDataset
 
 
 if sys.platform == "win32":
@@ -65,6 +66,7 @@ loader_map = {
     "imsitu":imSituDataset,
     "mnist":MNISTDataset,
     "jigsaw":JigsawDataset,
+    "sbic":SbicDataset,
 }
 
 def name2loader(args):
